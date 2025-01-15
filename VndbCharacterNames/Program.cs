@@ -54,14 +54,13 @@ internal static partial class Program
             }
 
             outputFilePath = Path.ChangeExtension(outputFilePath, "json");
-
             validArgs = true;
         }
 
         bool validInputs = false;
         while (!validArgs && !validInputs)
         {
-            Console.WriteLine("Please enter the path of the json file!");
+            Console.WriteLine("Please enter the path of the JSON file!");
             jsonFilePath = Console.ReadLine()?.Trim('"', ' ');
             if (!File.Exists(jsonFilePath))
             {
