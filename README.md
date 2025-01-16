@@ -2,7 +2,7 @@
 
 You need the character data from VNDB in the format that can be found in [this link](https://query.vndb.org/94589cbf0ce9d1d2/q). That query is for my personal use only, as it arbitrarily filters out characters based on the visual novels they appear in. So feel free to copy and edit it as you see fit. You should export the result as a JSON file by pressing EXPORT -> JSON. Note that VNDB Query service will truncate the results to the first 100000 rows. So you may need to use OFFSET and export the data multiple times depending on how many rows your query returns.
 
-After getting the necessary JSON files, create a new folder and put those file inside it. After that you can simply run this tool through Command Prompt like this:
+After getting the necessary JSON files, create a new folder and put those files inside it. After that you can simply run this tool through Command Prompt like this:
 
 `VndbCharacterNames.exe <Path of folder you just created> <Output file path>`
 
