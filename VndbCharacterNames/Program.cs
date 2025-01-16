@@ -234,7 +234,10 @@ internal static partial class Program
                     ? FullNameAndSexRegex.Replace(record.Definition, "").Replace("\t", "  ", StringComparison.Ordinal).ReplaceLineEndings("\\n")
                     : null;
 
+#pragma warning disable CA1308
                 string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType?.ToLowerInvariant() ?? OtherNameType}\t{definitionForCustomNameFile}";
+#pragma warning restore CA1308
+
                 lines.Add(line);
 
                 string definitionForNazeka = record.Definition is not null
