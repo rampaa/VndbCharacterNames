@@ -7,7 +7,7 @@ namespace VndbCharacterNames;
 
 internal static partial class Program
 {
-    private const string SurnameNameType = "surname";
+    private const string SurnameNameType = "Surname";
     private const string OtherNameType = "other";
 
     private static readonly JsonSerializerOptions s_jso = new()
@@ -234,7 +234,7 @@ internal static partial class Program
                     ? FullNameAndSexRegex.Replace(record.Definition, "").Replace("\t", "  ", StringComparison.Ordinal).ReplaceLineEndings("\\n")
                     : null;
 
-                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType ?? OtherNameType}\t{definitionForCustomNameFile}";
+                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType?.ToLowerInvariant() ?? OtherNameType}\t{definitionForCustomNameFile}";
                 lines.Add(line);
 
                 string definitionForNazeka = record.Definition is not null
