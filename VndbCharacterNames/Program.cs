@@ -141,7 +141,7 @@ internal static partial class Program
                     AddItemToDictionary(nameTypesDict, new NameRecord(fullNameWithoutAnyWhiteSpace, vndbNameRecord.FullNameInRomaji), vndbNameRecord.Sex);
                 }
 
-                _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, vndbNameRecord.FullNameInRomaji, definition));
+                _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, vndbNameRecord.FullNameInRomaji, vndbNameRecord.Sex, definition));
                 string[] splitRomajiParts = vndbNameRecord.FullNameInRomaji.Split((string[]?)null, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 if (splitRomajiParts.Length > 1)
                 {
@@ -226,9 +226,11 @@ internal static partial class Program
             List<string> lines = [];
             foreach (ConvertedNameRecord record in convertedRecords)
             {
-                string? nameType = nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out List<string>? nameTypes)
-                    ? string.Join(", ", nameTypes)
-                : null;
+                string? nameType = record.NameType is not null
+                    ? record.NameType
+                    : nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out List<string>? nameTypes)
+                        ? string.Join(", ", nameTypes)
+                        : null;
 
                 string? definitionForCustomNameFile = record.Definition is not null
                     ? FullNameAndSexRegex.Replace(record.Definition, "").Replace("\t", "  ", StringComparison.Ordinal).ReplaceLineEndings("\\n")
