@@ -45,7 +45,7 @@ jobs:
           release_name="VndbCharacterNames-$tag-${{ matrix.target }}"
           
           # Build everything
-          dotnet publish VndbCharacterNames/VndbCharacterNames.csproj --framework net9.0-windows --runtime "${{ matrix.target }}" --no-self-contained -c Release -o "$release_name" //p:Version=$tag
+          dotnet publish VndbCharacterNames/VndbCharacterNames.csproj --framework net9.0 --runtime "${{ matrix.target }}" --no-self-contained -c Release -o "$release_name" //p:Version=$tag
           
           # Pack files
           7z a -tzip "${release_name}.zip" "./${release_name}/*"
