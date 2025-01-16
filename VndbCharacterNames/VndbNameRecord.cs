@@ -91,7 +91,7 @@ internal sealed class VndbNameRecord(string fullName,
     {
         return Bust is null && Waist is null && Hip is null
             ? null
-            : $"B/W/H: {Bust?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Weight?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Hip?.ToString(CultureInfo.InvariantCulture) ?? "?"}";
+            : $"B/W/H: {Bust?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Waist?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Hip?.ToString(CultureInfo.InvariantCulture) ?? "?"}";
     }
 
     public string GetDefinition()
