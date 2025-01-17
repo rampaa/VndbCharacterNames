@@ -23,6 +23,12 @@ internal static partial class Program
     [GeneratedRegex(@"^Full name:.*\n((Sex:.*\n)|)", RegexOptions.CultureInvariant)]
     private static partial Regex FullNameAndSexRegex { get; }
 
+    [GeneratedRegex(@"[\u00D7\u2000-\u206F\u25A0-\u25FF\u2E80-\u319F\u31C0-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF]|\uD82C[\uDC00-\uDD6F]|\uD83C[\uDE00-\uDEFF]|\uD840[\uDC00-\uDFFF]|[\uD841-\uD868][\uDC00-\uDFFF]|\uD869[\uDC00-\uDEDF]|\uD869[\uDF00-\uDFFF]|[\uD86A-\uD87A][\uDC00-\uDFFF]|\uD87B[\uDC00-\uDE5F]|\uD87E[\uDC00-\uDE1F]|\uD880[\uDC00-\uDFFF]|[\uD881-\uD887][\uDC00-\uDFFF]|\uD888[\uDC00-\uDFAF]", RegexOptions.CultureInvariant)]
+    public static partial Regex JapaneseRegex { get; }
+
+    [GeneratedRegex(@"[\u0000-\u024F\u1E00-\u1EFF\u2C60-\u2C7F]", RegexOptions.CultureInvariant)]
+    public static partial Regex LatinRegex { get; }
+
     private static void AddItemToDictionary(Dictionary<NameRecord, List<string>> dict, NameRecord nameRecord, string nameType)
     {
         if (dict.TryGetValue(nameRecord, out List<string>? nameTypes))
@@ -117,6 +123,9 @@ internal static partial class Program
 
         Dictionary<NameRecord, List<string>> nameTypesDict = [];
         HashSet<ConvertedNameRecord> convertedRecords = [];
+
+        int validJsonFileCount = 0;
+        long totalVndbNameRecordCount = 0;
         foreach (string jsonFile in jsonFiles!)
         {
             using FileStream fileStream = File.OpenRead(jsonFile);
@@ -124,6 +133,8 @@ internal static partial class Program
             try
             {
                 vndbNameRecords = JsonSerializer.Deserialize<List<VndbNameRecord>>(fileStream, s_jso)!;
+                ++validJsonFileCount;
+                totalVndbNameRecordCount += vndbNameRecords.Count;
             }
             catch (JsonException)
             {
@@ -143,6 +154,11 @@ internal static partial class Program
 
                 _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, vndbNameRecord.FullNameInRomaji, vndbNameRecord.Sex, definition));
                 string[] splitRomajiParts = vndbNameRecord.FullNameInRomaji.Split((string[]?)null, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+                string? surname = null;
+                string? surnameInRomaji = null;
+                string? givenName = null;
+                string? givenNameInRomaji = null;
                 if (splitRomajiParts.Length > 1)
                 {
                     string[] splitFullNameParts = vndbNameRecord.FullName.Split((string[]?)null, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -157,28 +173,16 @@ internal static partial class Program
                         {
                             if (splitFullNameParts.Length is 2)
                             {
-                                string surname = splitFullNameParts[0];
-                                string surnameInRomaji = splitRomajiParts[0];
-                                string givenName = splitFullNameParts[1];
-                                string givenNameInRomaji = splitRomajiParts[1];
+                                surname = splitFullNameParts[0];
+                                surnameInRomaji = splitRomajiParts[0];
+                                givenName = splitFullNameParts[1];
+                                givenNameInRomaji = splitRomajiParts[1];
 
                                 if (KatakanaRegex.IsMatch(surname))
                                 {
                                     (surname, givenName) = (givenName, surname);
                                     (surnameInRomaji, givenNameInRomaji) = (givenNameInRomaji, surnameInRomaji);
                                 }
-
-                                NameRecord surnameAndRomaji = new(surname, surnameInRomaji);
-                                AddItemToDictionary(nameTypesDict, surnameAndRomaji, SurnameNameType);
-
-                                if (vndbNameRecord.Sex is not null)
-                                {
-                                    NameRecord givenNameAndRomajiRecord = new(givenName, givenNameInRomaji);
-                                    AddItemToDictionary(nameTypesDict, givenNameAndRomajiRecord, vndbNameRecord.Sex);
-                                }
-
-                                _ = convertedRecords.Add(new ConvertedNameRecord(surname, surnameInRomaji));
-                                _ = convertedRecords.Add(new ConvertedNameRecord(givenName, givenNameInRomaji));
                             }
                         }
                     }
@@ -189,29 +193,55 @@ internal static partial class Program
                         {
                             if (splitFullNameParts.Length is 2)
                             {
-                                string givenName = splitFullNameParts[0];
-                                string givenNameInRomaji = splitRomajiParts[0];
-                                string surname = splitFullNameParts[1];
-                                string surnameInRomaji = splitRomajiParts[1];
+                                givenName = splitFullNameParts[0];
+                                givenNameInRomaji = splitRomajiParts[0];
+                                surname = splitFullNameParts[1];
+                                surnameInRomaji = splitRomajiParts[1];
 
                                 if (!KatakanaRegex.IsMatch(surname) && !KatakanaRegex.IsMatch(givenName))
                                 {
                                     (givenName, surname) = (surname, givenName);
                                     (givenNameInRomaji, surnameInRomaji) = (surnameInRomaji, givenNameInRomaji);
                                 }
-
-                                NameRecord surnameAndRomaji = new(surname, surnameInRomaji);
-                                AddItemToDictionary(nameTypesDict, surnameAndRomaji, SurnameNameType);
-
-                                if (vndbNameRecord.Sex is not null)
-                                {
-                                    NameRecord givenNameAndRomajiRecord = new(givenName, givenNameInRomaji);
-                                    AddItemToDictionary(nameTypesDict, givenNameAndRomajiRecord, vndbNameRecord.Sex);
-                                }
-
-                                _ = convertedRecords.Add(new ConvertedNameRecord(surname, surnameInRomaji));
-                                _ = convertedRecords.Add(new ConvertedNameRecord(givenName, givenNameInRomaji));
                             }
+                        }
+                    }
+                }
+
+                if (givenName is not null && givenNameInRomaji is not null && surname is not null && surnameInRomaji is not null)
+                {
+                    NameRecord surnameAndRomaji = new(surname, surnameInRomaji);
+                    AddItemToDictionary(nameTypesDict, surnameAndRomaji, SurnameNameType);
+
+                    if (vndbNameRecord.Sex is not null)
+                    {
+                        NameRecord givenNameAndRomajiRecord = new(givenName, givenNameInRomaji);
+                        AddItemToDictionary(nameTypesDict, givenNameAndRomajiRecord, vndbNameRecord.Sex);
+                    }
+
+                    _ = convertedRecords.Add(new ConvertedNameRecord(surname, surnameInRomaji));
+                    _ = convertedRecords.Add(new ConvertedNameRecord(givenName, givenNameInRomaji));
+
+                    List<NameRecord>? aliasRecords = vndbNameRecord.GetAliasPairs();
+                    if (aliasRecords is not null)
+                    {
+                        foreach (NameRecord aliasRecord in aliasRecords)
+                        {
+                            if (surname != aliasRecord.Name && givenName != aliasRecord.Name)
+                            {
+                                _ = convertedRecords.Add(new ConvertedNameRecord(aliasRecord.Name, aliasRecord.NameInRomaji, vndbNameRecord.Sex, definition));
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    List<NameRecord>? aliasRecords = vndbNameRecord.GetAliasPairs();
+                    if (aliasRecords is not null)
+                    {
+                        foreach (NameRecord aliasRecord in aliasRecords)
+                        {
+                            _ = convertedRecords.Add(new ConvertedNameRecord(aliasRecord.Name, aliasRecord.NameInRomaji, vndbNameRecord.Sex, definition));
                         }
                     }
                 }
@@ -226,27 +256,22 @@ internal static partial class Program
             List<string> lines = [];
             foreach (ConvertedNameRecord record in convertedRecords)
             {
-                string? nameType = record.NameType is not null
-                    ? record.NameType
-                    : nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out List<string>? nameTypes)
-                        ? string.Join(", ", nameTypes)
-                        : null;
+#pragma warning disable CA1308
+                string? nameType = record.NameType ?? (nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out List<string>? nameTypes)
+                    ? string.Join(", ", nameTypes).ToLowerInvariant()
+                    : null);
+#pragma warning restore CA1308
 
                 string? definitionForCustomNameFile = record.Definition is not null
                     ? FullNameAndSexRegex.Replace(record.Definition, "").Replace("\t", "  ", StringComparison.Ordinal).ReplaceLineEndings("\\n")
                     : null;
 
-#pragma warning disable CA1308
-                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType?.ToLowerInvariant() ?? OtherNameType}\t{definitionForCustomNameFile}";
-#pragma warning restore CA1308
-
+                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType ?? OtherNameType}\t{definitionForCustomNameFile}";
                 lines.Add(line);
 
-                string definitionForNazeka = record.Definition is not null
-                    ? record.Definition
-                    : nameType is not null
-                        ? $"({nameType}) {record.Reading}"
-                        : record.Reading;
+                string definitionForNazeka = record.Definition ?? (nameType is not null
+                    ? $"({nameType}) {record.Reading}"
+                    : record.Reading);
 
                 JsonArray nazekaSpellingsArray = [record.PrimarySpelling];
                 JsonArray nazekaDefinitionsArray = [definitionForNazeka];
@@ -261,6 +286,14 @@ internal static partial class Program
             File.WriteAllLines(customNamePath, lines);
             File.WriteAllText(outputFilePath!, JsonSerializer.Serialize(nazekaJsonArray, s_jso));
             Console.WriteLine($"Successfully created {outputFilePath} and {customNamePath}!");
+
+            if (validJsonFileCount is 1 && totalVndbNameRecordCount is 100_000)
+            {
+                Console.WriteLine("You provided a single valid JSON file with exactly 100000 records. This probably means that the result of your query was truncated by VNDB Query.");
+            }
+
+            Console.WriteLine("Press any key to exit...");
+            _ = Console.ReadKey();
         }
         else
         {

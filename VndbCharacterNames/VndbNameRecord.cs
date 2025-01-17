@@ -168,4 +168,46 @@ internal sealed class VndbNameRecord(string fullName,
             ? definitionStringBuilder.ToString(0, definitionStringBuilder.Length - Environment.NewLine.Length)
             : FullNameInRomaji;
     }
+
+    public List<NameRecord>? GetAliasPairs()
+    {
+        if (Aliases is null || Aliases.Length % 2 is not 0)
+        {
+            return null;
+        }
+
+        bool evenNumberedAliasesShouldBeJapanese = Program.JapaneseRegex.IsMatch(Aliases[0]);
+        bool hasOnlyValidAliasPairs = true;
+        List<NameRecord> aliasRecords = new(Aliases.Length / 2);
+        for (int i = 0; i < Aliases.Length; i += 2)
+        {
+            if ((evenNumberedAliasesShouldBeJapanese && Program.JapaneseRegex.IsMatch(Aliases[i]) && Program.LatinRegex.IsMatch(Aliases[i + 1]))
+                || (!evenNumberedAliasesShouldBeJapanese && Program.LatinRegex.IsMatch(Aliases[i]) && Program.JapaneseRegex.IsMatch(Aliases[i + 1])))
+            {
+                string name;
+                string nameInRomaji;
+                if (evenNumberedAliasesShouldBeJapanese)
+                {
+                    name = Aliases[i];
+                    nameInRomaji = Aliases[i + 1];
+                }
+                else
+                {
+                    nameInRomaji = Aliases[i];
+                    name = Aliases[i + 1];
+                }
+
+                aliasRecords.Add(new NameRecord(name, nameInRomaji));
+            }
+            else
+            {
+                hasOnlyValidAliasPairs = false;
+                break;
+            }
+        }
+
+        return hasOnlyValidAliasPairs && aliasRecords.Count > 0
+            ? aliasRecords
+            : null;
+    }
 }
