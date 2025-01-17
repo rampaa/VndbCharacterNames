@@ -138,7 +138,7 @@ internal static partial class Program
             }
             catch (JsonException)
             {
-                Console.WriteLine($"{jsonFile} doesn't appear to be in the expected format! Please consider putting the related JSON file(s) into ");
+                Console.WriteLine($"{jsonFile} doesn't appear to be in the expected format! Next time please consider putting the related JSON file(s) into an empty folder.");
                 continue;
             }
 
