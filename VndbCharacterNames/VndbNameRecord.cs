@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace VndbCharacterNames;
 
@@ -171,18 +172,46 @@ internal sealed class VndbNameRecord(string fullName,
 
     public List<NameRecord>? GetAliasPairs()
     {
-        if (Aliases is null || Aliases.Length % 2 is not 0)
+        if (Aliases is null)
         {
             return null;
         }
 
-        bool evenNumberedAliasesShouldBeJapanese = Program.JapaneseRegex.IsMatch(Aliases[0]);
-        bool hasOnlyValidAliasPairs = true;
         List<NameRecord> aliasRecords = new(Aliases.Length / 2);
+        foreach (string alias in Aliases)
+        {
+            Match match = Utils.NameInParentheses.Match(alias);
+            if (match.Success)
+            {
+                string firstMatch = match.Groups[1].Value;
+                string secondMatch = match.Groups[2].Value;
+                if (Utils.JapaneseRegex.IsMatch(firstMatch) && Utils.LatinRegex.IsMatch(secondMatch))
+                {
+                    aliasRecords.Add(new NameRecord(firstMatch, secondMatch));
+                }
+                else if (Utils.JapaneseRegex.IsMatch(secondMatch) && Utils.LatinRegex.IsMatch(firstMatch))
+                {
+                    aliasRecords.Add(new NameRecord(secondMatch, firstMatch));
+                }
+            }
+        }
+
+        if (aliasRecords.Count > 0)
+        {
+            return aliasRecords;
+        }
+
+        if (Aliases.Length % 2 is not 0)
+        {
+            return null;
+        }
+
+        bool evenNumberedAliasesShouldBeJapanese = Utils.JapaneseRegex.IsMatch(Aliases[0]);
+        bool hasOnlyValidAliasPairs = true;
         for (int i = 0; i < Aliases.Length; i += 2)
         {
-            if ((evenNumberedAliasesShouldBeJapanese && Program.JapaneseRegex.IsMatch(Aliases[i]) && Program.LatinRegex.IsMatch(Aliases[i + 1]))
-                || (!evenNumberedAliasesShouldBeJapanese && Program.LatinRegex.IsMatch(Aliases[i]) && Program.JapaneseRegex.IsMatch(Aliases[i + 1])))
+            if ((evenNumberedAliasesShouldBeJapanese && Utils.JapaneseRegex.IsMatch(Aliases[i]) && Utils.LatinRegex.IsMatch(Aliases[i + 1]))
+                || (!evenNumberedAliasesShouldBeJapanese && Utils.LatinRegex.IsMatch(Aliases[i]) && Utils.JapaneseRegex.IsMatch(Aliases[i + 1])))
             {
                 string name;
                 string nameInRomaji;
