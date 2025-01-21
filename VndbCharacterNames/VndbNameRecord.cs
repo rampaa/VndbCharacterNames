@@ -35,7 +35,7 @@ internal sealed class VndbNameRecord(string fullName,
     public string[] VisualNovelTitles { get; } = visualNovelTitles;
 
     [JsonPropertyName("Aliases")]
-    public string[]? Aliases { get; } = aliases;
+    public string[]? Aliases { get; private set; } = aliases;
 
     [JsonPropertyName("Blood Type")]
     public string? BloodType { get; } = bloodType;
@@ -170,21 +170,54 @@ internal sealed class VndbNameRecord(string fullName,
             : FullNameInRomaji;
     }
 
-    public List<NameRecord>? GetAliasPairs()
+    public List<NameRecord>? GetAliasRecords()
     {
         if (Aliases is null)
         {
             return null;
         }
 
-        List<NameRecord> aliasRecords = new(Aliases.Length / 2);
-        foreach (string alias in Aliases)
+        if (Aliases.All(static a => a.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Length is 2))
         {
+            Aliases = Aliases.SelectMany(static a => a.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)).ToArray();
+        }
+
+        List<NameRecord> aliasRecords = new(Aliases.Length / 2);
+        for (int i = 0; i < Aliases.Length; i++)
+        {
+            string alias = Aliases[i];
             Match match = Utils.NameInParentheses.Match(alias);
             if (match.Success)
             {
                 string firstMatch = match.Groups[1].Value;
                 string secondMatch = match.Groups[2].Value;
+                if (Utils.JapaneseRegex.IsMatch(firstMatch) && Utils.LatinRegex.IsMatch(secondMatch))
+                {
+                    aliasRecords.Add(new NameRecord(firstMatch, secondMatch));
+                }
+                else if (Utils.JapaneseRegex.IsMatch(secondMatch) && Utils.LatinRegex.IsMatch(firstMatch))
+                {
+                    aliasRecords.Add(new NameRecord(secondMatch, firstMatch));
+                }
+                else if (Utils.LatinRegex.IsMatch(firstMatch) && Utils.LatinRegex.IsMatch(secondMatch))
+                {
+                    Aliases[i] = firstMatch;
+                }
+            }
+        }
+
+        if (aliasRecords.Count > 0)
+        {
+            return aliasRecords;
+        }
+
+        foreach (string alias in Aliases)
+        {
+            string[] aliases = alias.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (aliases.Length is 2)
+            {
+                string firstMatch = aliases[0];
+                string secondMatch = aliases[1];
                 if (Utils.JapaneseRegex.IsMatch(firstMatch) && Utils.LatinRegex.IsMatch(secondMatch))
                 {
                     aliasRecords.Add(new NameRecord(firstMatch, secondMatch));
