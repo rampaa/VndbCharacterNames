@@ -213,37 +213,7 @@ file static class Program
                 {
                     if (!surnames.Contains(aliasRecord.Name) && !givenNames.Contains(aliasRecord.Name))
                     {
-                        string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
-                        if (sex is not null)
-                        {
-                            nameTypesDict.AddIfNotExists(new NameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji), sex);
-                        }
-
-                        _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, sex, definition));
-                        List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? aliasSurnameAndNameRecords = GetSurnameAndNameRecords(aliasRecord.Name, aliasRecord.NameInRomaji);
-                        if (aliasSurnameAndNameRecords is not null)
-                        {
-                            string[] aliasSurnames = aliasSurnameAndNameRecords.Select(static r => r.surnameRecord.Name).ToArray();
-                            string[] aliasGivenNames = aliasSurnameAndNameRecords.Select(static r => r.givenNameRecord.Name).ToArray();
-                            foreach ((NameRecord aliasSurnameRecord, NameRecord aliasGivenNameRecord) in aliasSurnameAndNameRecords)
-                            {
-                                if (!aliasSurnames.Contains(aliasSurnameRecord.Name))
-                                {
-                                    nameTypesDict.AddIfNotExists(aliasSurnameRecord, Utils.SurnameNameType);
-                                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji));
-                                }
-
-                                if (!aliasGivenNames.Contains(aliasGivenNameRecord.Name))
-                                {
-                                    if (sex is not null)
-                                    {
-                                        nameTypesDict.AddIfNotExists(aliasGivenNameRecord, sex);
-                                    }
-
-                                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasGivenNameRecord.Name, aliasGivenNameRecord.NameInRomaji));
-                                }
-                            }
-                        }
+                        ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex);
                     }
                 }
             }
@@ -252,28 +222,40 @@ file static class Program
         {
             foreach (NameRecord aliasRecord in aliasRecords)
             {
-                string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
-                if (sex is not null)
+                ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex);
+            }
+        }
+    }
+
+    private static void ProcessAlias(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, NameRecord aliasRecord, string definition, string? sex)
+    {
+        string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
+        if (sex is not null)
+        {
+            nameTypesDict.AddIfNotExists(new NameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji), sex);
+        }
+
+        _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, sex, definition));
+        List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? aliasSurnameAndNameRecords = GetSurnameAndNameRecords(aliasRecord.Name, aliasRecord.NameInRomaji);
+        if (aliasSurnameAndNameRecords is not null)
+        {
+            for (int i = 0; i < aliasSurnameAndNameRecords.Count; i++)
+            {
+                (NameRecord aliasSurnameRecord, NameRecord aliasGivenNameRecord) = aliasSurnameAndNameRecords[i];
+                if (!aliasSurnameAndNameRecords.Where((record, index) => index != i && aliasSurnameRecord.Name == record.surnameRecord.Name).Any())
                 {
-                    nameTypesDict.AddIfNotExists(new NameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji), sex);
+                    nameTypesDict.AddIfNotExists(aliasSurnameRecord, Utils.SurnameNameType);
+                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji));
                 }
 
-                _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, sex, definition));
-                List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? aliasSurnameAndNameRecords = GetSurnameAndNameRecords(aliasRecord.Name, aliasRecord.NameInRomaji);
-                if (aliasSurnameAndNameRecords is not null)
+                if (!aliasSurnameAndNameRecords.Where((record, index) => index != i && aliasGivenNameRecord.Name == record.givenNameRecord.Name).Any())
                 {
-                    foreach ((NameRecord aliasSurnameRecord, NameRecord aliasGivenNameRecord) in aliasSurnameAndNameRecords)
+                    if (sex is not null)
                     {
-                        nameTypesDict.AddIfNotExists(aliasSurnameRecord, Utils.SurnameNameType);
-                        _ = convertedRecords.Add(new ConvertedNameRecord(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji));
-
-                        if (sex is not null)
-                        {
-                            nameTypesDict.AddIfNotExists(aliasGivenNameRecord, sex);
-                        }
-
-                        _ = convertedRecords.Add(new ConvertedNameRecord(aliasGivenNameRecord.Name, aliasGivenNameRecord.NameInRomaji));
+                        nameTypesDict.AddIfNotExists(aliasGivenNameRecord, sex);
                     }
+
+                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasGivenNameRecord.Name, aliasGivenNameRecord.NameInRomaji));
                 }
             }
         }
