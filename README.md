@@ -14,7 +14,7 @@ Or you can double-click `VndbCharacterNames.exe` and give those paths when promp
 
 This will create two files, {SpecifiedFileName}_Custom_Name.txt and {SpecifiedFileName}.json.
 
-The former is in JL Custom Name format. Using it for full VNDB character data is not adviced. It's mostly useful when you want to generate a custom name dictionary for a specific dictionary. You should rename it to {JLProfileNameForTheVN}_Custom_Name.txt and place it under ..\JL\Profiles.
+The former is in JL Custom Name format. Using it for full VNDB character data is not adviced. It's mostly useful when you want to generate a custom name dictionary for characters from a specific visual novel. You should rename it to {JLProfileNameForTheVN}_Custom_Name.txt and place it under ..\JL\Profiles.
 
 The latter is in Nazeka EPWING Converter format, so you can use it with Nazeka and [JL](https://github.com/rampaa/JL). If you plan to use it with JL, make sure to select `Name Dictionary (Nazeka)` as your dictionary type.
 
