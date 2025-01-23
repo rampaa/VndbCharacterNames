@@ -138,8 +138,9 @@ file static class Program
             List<string> lines = [];
             foreach (ConvertedNameRecord record in convertedRecords)
             {
+                List<string>? nameTypes = null;
 #pragma warning disable CA1308
-                string? nameType = record.NameType ?? (nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out List<string>? nameTypes)
+                string? nameType = record.NameType ?? (nameTypesDict.TryGetValue(new NameRecord(record.PrimarySpelling, record.Reading), out nameTypes)
                     ? string.Join(", ", nameTypes).ToLowerInvariant()
                     : null);
 #pragma warning restore CA1308
@@ -151,7 +152,7 @@ file static class Program
                 string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType ?? Utils.OtherNameType}\t{definitionForCustomNameFile}";
                 lines.Add(line);
 
-                string definitionForNazeka = record.Definition ?? (nameType is not null
+                string definitionForNazeka = record.Definition ?? (nameType is not null && nameTypes!.Count < 4
                     ? $"({nameType}) {record.Reading}"
                     : record.Reading);
 
