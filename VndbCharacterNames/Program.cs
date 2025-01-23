@@ -11,7 +11,7 @@ file static class Program
         List<string>? jsonFiles = null;
 
         bool shouldAddDefinition = true;
-        bool addDefinitionToOneWordNames = true;
+        bool addDefinitionToOneWordNames = false;
         bool addDefinitionToGivenNames = shouldAddDefinition && false;
         bool addDefinitionToSurnames = shouldAddDefinition && false;
 
