@@ -1,6 +1,6 @@
 namespace VndbCharacterNames;
 
-internal sealed record class ConvertedNameRecord(string PrimarySpelling, string Reading, string? NameType = null, string? Definition = null)
+internal sealed record class ConvertedNameRecord(string PrimarySpelling, string Reading, string? NameType, string? Definition)
 {
     public string PrimarySpelling { get; } = PrimarySpelling;
     public string Reading { get; } = Reading;
