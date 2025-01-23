@@ -174,6 +174,8 @@ file static class Program
         else
         {
             Console.WriteLine("There is no file in the expected format in the folder specified!");
+
+            // ReSharper disable once TailRecursiveCall
             Main(args);
         }
     }
@@ -181,7 +183,6 @@ file static class Program
     private static void ProcessFullNames(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, string fullName, string fullNameInRomaji, string definition, string? sex, List<NameRecord>? aliasRecords)
     {
         string fullNameWithoutAnyWhiteSpace = string.Join("", fullName.Split());
-
         if (sex is not null)
         {
             nameTypesDict.AddIfNotExists(new NameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji), sex);
@@ -189,7 +190,6 @@ file static class Program
 
         _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji, sex, definition));
         List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? surnameAndNameRecords = GetSurnameAndNameRecords(fullName, fullNameInRomaji);
-
         if (surnameAndNameRecords is not null)
         {
             foreach ((NameRecord surnameRecord, NameRecord givenNameRecord) in surnameAndNameRecords)
@@ -227,7 +227,7 @@ file static class Program
         }
     }
 
-    private static void ProcessAlias(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, NameRecord aliasRecord, string definition, string? sex)
+    private static void ProcessAlias(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, NameRecord aliasRecord, string definition, string? sex, string[]? surnames = null, string[]? givenNames = null)
     {
         string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
         if (sex is not null)
@@ -242,13 +242,15 @@ file static class Program
             for (int i = 0; i < aliasSurnameAndNameRecords.Count; i++)
             {
                 (NameRecord aliasSurnameRecord, NameRecord aliasGivenNameRecord) = aliasSurnameAndNameRecords[i];
-                if (!aliasSurnameAndNameRecords.Where((record, index) => index != i && aliasSurnameRecord.Name == record.surnameRecord.Name).Any())
+                if ((!surnames?.Contains(aliasSurnameRecord.Name) ?? true)
+                    && !aliasSurnameAndNameRecords.Where((record, index) => index < i && aliasSurnameRecord.Name == record.surnameRecord.Name).Any())
                 {
                     nameTypesDict.AddIfNotExists(aliasSurnameRecord, Utils.SurnameNameType);
                     _ = convertedRecords.Add(new ConvertedNameRecord(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji));
                 }
 
-                if (!aliasSurnameAndNameRecords.Where((record, index) => index != i && aliasGivenNameRecord.Name == record.givenNameRecord.Name).Any())
+                if ((!givenNames?.Contains(aliasGivenNameRecord.Name) ?? true)
+                    && !aliasSurnameAndNameRecords.Where((record, index) => index < i && aliasGivenNameRecord.Name == record.givenNameRecord.Name).Any())
                 {
                     if (sex is not null)
                     {
