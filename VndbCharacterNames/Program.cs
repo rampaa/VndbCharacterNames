@@ -41,20 +41,20 @@ file static class Program
                     {
                         outputFilePath = Path.ChangeExtension(outputFilePath, "json");
 
-                        bool? result = GetBoolArgValue(args[2], "--add-character-details-to-full-names");
+                        bool? result = GetBoolArgValue(args, "--add-character-details-to-full-names", 2);
                         if (result is not null)
                         {
                             shouldAddDefinition = result.Value;
 
-                            result = GetBoolArgValue(args[3], "--add-details-to-one-word-full-names");
+                            result = GetBoolArgValue(args, "--add-details-to-one-word-full-names", 2);
                             if (result is not null)
                             {
                                 addDefinitionToOneWordNames = result.Value;
-                                result = GetBoolArgValue(args[4], "--add-details-to-given-names");
+                                result = GetBoolArgValue(args, "--add-details-to-given-names", 2);
                                 if (result is not null)
                                 {
                                     addDefinitionToGivenNames = result.Value;
-                                    result = GetBoolArgValue(args[5], "--add-details-to-surnames");
+                                    result = GetBoolArgValue(args, "--add-details-to-surnames", 2);
                                     if (result is not null)
                                     {
                                         addDefinitionToSurnames = result.Value;
@@ -435,26 +435,36 @@ file static class Program
         }
     }
 
-    private static bool? GetBoolArgValue(string arg, string flagName)
+    private static bool? GetBoolArgValue(string[] args, string flagName, int startIndex)
     {
-        string[] addCharacterDetailToFullNameOption = arg.Split('=', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (addCharacterDetailToFullNameOption.Length is 2 && addCharacterDetailToFullNameOption[0] == flagName)
+        string[]? splitOptionParts = null;
+        for (int i = startIndex; i < args.Length; i++)
         {
-            if (string.Equals(addCharacterDetailToFullNameOption[1], "true", StringComparison.OrdinalIgnoreCase))
+            string[] tempOption = args[i].Split('=', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (tempOption.Length is 2 && tempOption[0] == flagName)
             {
-                return true;
+                splitOptionParts = tempOption;
+                break;
             }
+        }
 
-            if (string.Equals(addCharacterDetailToFullNameOption[1], "false", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            Console.WriteLine($"Invalid value for '{flagName}' option!");
+        if (splitOptionParts is null)
+        {
+            Console.WriteLine("Invalid input!");
             return null;
         }
 
-        Console.WriteLine("Invalid input!");
+        if (string.Equals(splitOptionParts[1], "true", StringComparison.OrdinalIgnoreCase) || string.Equals(splitOptionParts[1], "t", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(splitOptionParts[1], "false", StringComparison.OrdinalIgnoreCase) || string.Equals(splitOptionParts[1], "f", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        Console.WriteLine($"Invalid value for '{flagName}' option!");
         return null;
     }
 
