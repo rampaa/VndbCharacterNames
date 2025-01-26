@@ -4,11 +4,11 @@ You need the character data from VNDB in the format that can be found in [this l
 
 After getting the necessary JSON files, create a new folder and put those files inside it. After that you can simply run this tool through Command Prompt like this:
 
-`VndbCharacterNames.exe <Path of folder you just created> <Output file path>`
+`VndbCharacterNames.exe <Path of folder you just created> <Output file path> --add-character-details-to-full-names=<true/false> --add-details-to-one-word-full-names=<true/false> --add-details-to-given-names=<true/false> --add-details-to-surnames=<true/false>`
 
 e.g.,
 
-`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames`
+`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames --add-character-details-to-full-names=true --add-details-to-one-word-full-names=false --add-details-to-given-names=false --add-details-to-surnames=false`
 
 Or you can double-click `VndbCharacterNames.exe` and give those paths when prompted.
 
