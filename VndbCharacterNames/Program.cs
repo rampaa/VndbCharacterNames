@@ -12,48 +12,13 @@ file static class Program
 
         bool shouldAddDefinition = true;
         bool addDefinitionToOneWordNames = false;
-        bool addDefinitionToGivenNames = shouldAddDefinition && false;
-        bool addDefinitionToSurnames = shouldAddDefinition && false;
+        bool addDefinitionToGivenNames = false;
+        bool addDefinitionToSurnames = false;
 
         bool validArgs = false;
-        if (args.Length is 2)
+        if (args.Length is 6)
         {
-            bool valid = true;
             string jsonFolderPath = args[0].Trim('"', ' ');
-            if (!Directory.Exists(jsonFolderPath))
-            {
-                Console.WriteLine("The folder specified does not exist!");
-                valid = false;
-            }
-            else
-            {
-                jsonFiles = Directory.EnumerateFiles(jsonFolderPath, "*.json", SearchOption.TopDirectoryOnly).ToList();
-                if (jsonFiles.Count is 0)
-                {
-                    Console.WriteLine("There's no JSON file in the specified folder!");
-                    valid = false;
-                }
-            }
-
-            outputFilePath = args[1].Trim('"', ' ');
-            if (!Path.IsPathFullyQualified(outputFilePath))
-            {
-                Console.WriteLine("Invalid file path!");
-                valid = false;
-            }
-
-            validArgs = valid;
-            if (validArgs)
-            {
-                outputFilePath = Path.ChangeExtension(outputFilePath, "json");
-            }
-        }
-
-        bool validInputs = false;
-        while (!validArgs && !validInputs)
-        {
-            Console.WriteLine("Please enter the path of the folder where JSON file(s) are placed");
-            string? jsonFolderPath = Console.ReadLine()?.Trim('"', ' ');
             if (!Directory.Exists(jsonFolderPath))
             {
                 Console.WriteLine("The folder specified does not exist!");
@@ -67,26 +32,96 @@ file static class Program
                 }
                 else
                 {
-                    validInputs = true;
+                    outputFilePath = args[1].Trim('"', ' ');
+                    if (!Path.IsPathFullyQualified(outputFilePath))
+                    {
+                        Console.WriteLine("Invalid file path!");
+                    }
+                    else
+                    {
+                        outputFilePath = Path.ChangeExtension(outputFilePath, "json");
+
+                        bool? result = GetBoolArgValue(args[2], "--add-character-details-to-full-names");
+                        if (result is not null)
+                        {
+                            shouldAddDefinition = result.Value;
+
+                            result = GetBoolArgValue(args[3], "--add-details-to-one-word-names");
+                            if (result is not null)
+                            {
+                                addDefinitionToOneWordNames = result.Value;
+                                result = GetBoolArgValue(args[4], "--add-details-to-given-names");
+                                if (result is not null)
+                                {
+                                    addDefinitionToGivenNames = result.Value;
+                                    result = GetBoolArgValue(args[5], "--add-details-to-surnames");
+                                    if (result is not null)
+                                    {
+                                        addDefinitionToSurnames = result.Value;
+                                        validArgs = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        validInputs = false;
-        while (!validArgs && !validInputs)
+        if (!validArgs)
         {
-            Console.WriteLine("Please enter the path to save the generated file, it must include its name as well.");
-            outputFilePath = Console.ReadLine()?.Trim('"', ' ');
-            if (outputFilePath is null || !Path.IsPathFullyQualified(outputFilePath))
+            while (true)
             {
-                Console.WriteLine("Invalid file path!");
+                Console.WriteLine("Please enter the path of the folder where JSON file(s) are placed");
+                string? jsonFolderPath = Console.ReadLine()?.Trim('"', ' ');
+                if (!Directory.Exists(jsonFolderPath))
+                {
+                    Console.WriteLine("The folder specified does not exist!");
+                }
+                else
+                {
+                    jsonFiles = Directory.EnumerateFiles(jsonFolderPath, "*.json", SearchOption.TopDirectoryOnly).ToList();
+                    if (jsonFiles.Count is 0)
+                    {
+                        Console.WriteLine("There's no JSON file in the specified folder!");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
-            else
+
+            while (true)
             {
-                outputFilePath = Path.ChangeExtension(outputFilePath, "json");
-                validArgs = true;
+                Console.WriteLine("Please enter the path to save the generated file, it must include its name as well.");
+                outputFilePath = Console.ReadLine()?.Trim('"', ' ');
+                if (outputFilePath is null || !Path.IsPathFullyQualified(outputFilePath))
+                {
+                    Console.WriteLine("Invalid file path!");
+                }
+                else
+                {
+                    outputFilePath = Path.ChangeExtension(outputFilePath, "json");
+                    break;
+                }
+            }
+
+            shouldAddDefinition = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
+            if (shouldAddDefinition)
+            {
+                addDefinitionToOneWordNames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of a character's full name when it consists of a single word? Y/N");
+                if (addDefinitionToOneWordNames)
+                {
+                    addDefinitionToGivenNames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of given names? Y/N");
+                    addDefinitionToSurnames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of surnames? Y/N");
+                }
             }
         }
+
+        addDefinitionToOneWordNames = shouldAddDefinition && addDefinitionToOneWordNames;
+        addDefinitionToGivenNames = addDefinitionToOneWordNames && addDefinitionToGivenNames;
+        addDefinitionToSurnames = addDefinitionToOneWordNames && addDefinitionToSurnames;
 
         Dictionary<NameRecord, List<string>> nameTypesDict = [];
         HashSet<ConvertedNameRecord> convertedRecords = [];
@@ -379,4 +414,48 @@ file static class Program
 
         return index;
     }
+
+    private static bool GetAnserOfYesNoQuestion(string question)
+    {
+        while (true)
+        {
+            Console.WriteLine(question);
+            string? userInput = Console.ReadLine();
+            if (string.Equals(userInput, "Y", StringComparison.OrdinalIgnoreCase) || string.Equals(userInput, "Yes", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(userInput, "N", StringComparison.OrdinalIgnoreCase) || string.Equals(userInput, "No", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            Console.WriteLine("Invalid input!");
+        }
+    }
+
+    private static bool? GetBoolArgValue(string arg, string flagName)
+    {
+        string[] addCharacterDetailToFullNameOption = arg.Split('=', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (addCharacterDetailToFullNameOption.Length is 2 && addCharacterDetailToFullNameOption[0] == flagName)
+        {
+            if (string.Equals(addCharacterDetailToFullNameOption[1], "true", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(addCharacterDetailToFullNameOption[1], "false", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            Console.WriteLine($"Invalid value for '{flagName}' option!");
+            return null;
+        }
+
+        Console.WriteLine("Invalid input!");
+        return null;
+    }
+
 }
