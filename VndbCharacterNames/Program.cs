@@ -46,7 +46,7 @@ file static class Program
                         {
                             shouldAddDefinition = result.Value;
 
-                            result = GetBoolArgValue(args[3], "--add-details-to-one-word-names");
+                            result = GetBoolArgValue(args[3], "--add-details-to-one-word-full-names");
                             if (result is not null)
                             {
                                 addDefinitionToOneWordNames = result.Value;
