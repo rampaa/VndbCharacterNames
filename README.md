@@ -4,13 +4,13 @@ You need the character data from VNDB in the format that can be found in [this l
 
 After getting the necessary JSON files, create a new folder and put those files inside it. After that you can simply run this tool through Command Prompt like this:
 
-`VndbCharacterNames.exe <Path of folder you just created> <Output file path> --add-character-details-to-full-names=<true/false> --add-details-to-one-word-full-names=<true/false> --add-details-to-given-names=<true/false> --add-details-to-surnames=<true/false>`
+`VndbCharacterNames.exe <Path of folder you just created> <Output file path> --create-alias-entries=<true/false> --add-character-details-to-full-names=<true/false> --add-details-to-one-word-full-names=<true/false> --add-details-to-given-names=<true/false> --add-details-to-surnames=<true/false>`
 
 e.g.,
 
-`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames --add-character-details-to-full-names=true --add-details-to-one-word-full-names=false --add-details-to-given-names=false --add-details-to-surnames=false`
+`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames --create-alias-entries=true --add-character-details-to-full-names=true --add-character-details-to-one-word-full-names=false --add-character-details-to-given-names=false --add-character-details-to-surnames=false`
 
-Or you can double-click `VndbCharacterNames.exe` and give those paths when prompted.
+Or you can double-click `VndbCharacterNames.exe` and input those parameters when prompted.
 
 This will create two files, {SpecifiedFileName}_Custom_Name.txt and {SpecifiedFileName}.json.
 
