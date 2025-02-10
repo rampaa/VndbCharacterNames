@@ -11,12 +11,13 @@ file static class Program
         List<string>? jsonFiles = null;
 
         bool shouldAddDefinition = true;
+        bool createAliasEntries = true;
         bool addDefinitionToOneWordNames = false;
         bool addDefinitionToGivenNames = false;
         bool addDefinitionToSurnames = false;
 
         bool validArgs = false;
-        if (args.Length is 6)
+        if (args.Length is 7)
         {
             string jsonFolderPath = args[0].Trim('"', ' ');
             if (!Directory.Exists(jsonFolderPath))
@@ -41,24 +42,30 @@ file static class Program
                     {
                         outputFilePath = Path.ChangeExtension(outputFilePath, "json");
 
-                        bool? result = GetBoolArgValue(args, "--add-character-details-to-full-names", 2);
+                        bool? result = GetBoolArgValue(args, "--create-alias-entries", 2);
                         if (result is not null)
                         {
-                            shouldAddDefinition = result.Value;
+                            createAliasEntries = result.Value;
 
-                            result = GetBoolArgValue(args, "--add-details-to-one-word-full-names", 2);
+                            result = GetBoolArgValue(args, "--add-character-details-to-full-names", 2);
                             if (result is not null)
                             {
-                                addDefinitionToOneWordNames = result.Value;
-                                result = GetBoolArgValue(args, "--add-details-to-given-names", 2);
+                                shouldAddDefinition = result.Value;
+
+                                result = GetBoolArgValue(args, "--add-character-details-to-one-word-full-names", 2);
                                 if (result is not null)
                                 {
-                                    addDefinitionToGivenNames = result.Value;
-                                    result = GetBoolArgValue(args, "--add-details-to-surnames", 2);
+                                    addDefinitionToOneWordNames = result.Value;
+                                    result = GetBoolArgValue(args, "--add-character-details-to-given-names", 2);
                                     if (result is not null)
                                     {
-                                        addDefinitionToSurnames = result.Value;
-                                        validArgs = true;
+                                        addDefinitionToGivenNames = result.Value;
+                                        result = GetBoolArgValue(args, "--add-character-details-to-surnames", 2);
+                                        if (result is not null)
+                                        {
+                                            addDefinitionToSurnames = result.Value;
+                                            validArgs = true;
+                                        }
                                     }
                                 }
                             }
@@ -107,6 +114,7 @@ file static class Program
                 }
             }
 
+            createAliasEntries = GetAnserOfYesNoQuestion("Create entries for character aliases if they are sufficiently structured? Y/N");
             shouldAddDefinition = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
             if (shouldAddDefinition)
             {
@@ -147,7 +155,9 @@ file static class Program
             foreach (VndbNameRecord vndbNameRecord in vndbNameRecords)
             {
                 string definition = vndbNameRecord.GetDefinition();
-                List<NameRecord>? aliasRecords = vndbNameRecord.GetAliasRecords();
+                List<NameRecord>? aliasRecords = createAliasEntries
+                    ? vndbNameRecord.GetAliasRecords()
+                    : null;
 
                 ProcessFullNames(nameTypesDict, convertedRecords, vndbNameRecord.FullName, vndbNameRecord.FullNameInRomaji, definition, vndbNameRecord.Sex, aliasRecords, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
                 string[] fullNames = vndbNameRecord.FullName.Split(['&', '/', '／', '＆', ',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -188,7 +198,7 @@ file static class Program
                 lines.Add(line);
 
                 string definitionForNazeka = record.Definition ?? (nameType is not null && nameTypes!.Count < 4
-                    ? $"({nameType}) {record.Reading}"
+                    ? $"[{nameType}] {record.Reading}"
                     : record.Reading);
 
                 JsonArray nazekaSpellingsArray = [record.PrimarySpelling];
