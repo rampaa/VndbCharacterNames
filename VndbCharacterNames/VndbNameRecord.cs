@@ -160,10 +160,10 @@ internal sealed class VndbNameRecord(string fullName,
             _ = definitionStringBuilder.AppendLine(aliases);
         }
 
-        string vns = VisualNovelTitles.Length > 1
-            ? $"VNs: {string.Join(", ", VisualNovelTitles)}"
-            : $"VN: {VisualNovelTitles[0]}";
-        _ = definitionStringBuilder.AppendLine(vns);
+        if (VisualNovelTitles.Length is 1)
+        {
+            _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"VN: {VisualNovelTitles[0]}");
+        }
 
         return definitionStringBuilder.Length > 0
             ? definitionStringBuilder.ToString(0, definitionStringBuilder.Length - Environment.NewLine.Length)
