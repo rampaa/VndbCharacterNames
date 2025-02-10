@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -7,6 +8,9 @@ file static class Program
 {
     public static void Main(string[] args)
     {
+        Console.InputEncoding = Encoding.Unicode;
+        Console.OutputEncoding = Encoding.Unicode;
+
         string? outputFilePath = null;
         List<string>? jsonFiles = null;
 
@@ -237,17 +241,22 @@ file static class Program
         List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? surnameAndNameRecords = GetSurnameAndNameRecords(fullName, fullNameInRomaji);
         bool oneWordName = surnameAndNameRecords is null;
 
-        string fullNameWithoutAnyWhiteSpace = oneWordName ? fullName : string.Join("", fullName.Split());
         if (sex is not null)
         {
-            nameTypesDict.AddIfNotExists(new NameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji), sex);
+            nameTypesDict.AddIfNotExists(new NameRecord(fullName, fullNameInRomaji), sex);
         }
 
         bool addDefinitionAndSex = shouldAddDefinition && (addDefinitionToOneWordNames || !oneWordName);
-        _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+        _ = convertedRecords.Add(new ConvertedNameRecord(fullName, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
 
         if (!oneWordName)
         {
+            string fullNameWithoutAnyWhiteSpace = string.Join("", fullName.Split());
+            if (fullNameWithoutAnyWhiteSpace != fullName)
+            {
+                _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+            }
+
             foreach ((NameRecord surnameRecord, NameRecord givenNameRecord) in surnameAndNameRecords!)
             {
                 nameTypesDict.AddIfNotExists(surnameRecord, Utils.SurnameNameType);
@@ -288,16 +297,22 @@ file static class Program
         List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? aliasSurnameAndNameRecords = GetSurnameAndNameRecords(aliasRecord.Name, aliasRecord.NameInRomaji);
         bool oneWordName = aliasSurnameAndNameRecords is null;
 
-        string fullAliasWithoutAnyWhiteSpace = oneWordName ? aliasRecord.Name : string.Join("", aliasRecord.Name.Split());
         if (sex is not null)
         {
-            nameTypesDict.AddIfNotExists(new NameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji), sex);
+            nameTypesDict.AddIfNotExists(new NameRecord(aliasRecord.Name, aliasRecord.NameInRomaji), sex);
         }
 
         bool addDefinitionAndSex = shouldAddDefinition && (addDefinitionToOneWordNames || !oneWordName);
-        _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+        _ = convertedRecords.Add(new ConvertedNameRecord(aliasRecord.Name, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+
         if (!oneWordName)
         {
+            string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
+            if (fullAliasWithoutAnyWhiteSpace != aliasRecord.Name)
+            {
+                _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+            }
+
             for (int i = 0; i < aliasSurnameAndNameRecords!.Count; i++)
             {
                 (NameRecord aliasSurnameRecord, NameRecord aliasGivenNameRecord) = aliasSurnameAndNameRecords[i];
