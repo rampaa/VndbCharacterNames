@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -11,7 +12,7 @@ namespace VndbCharacterNames;
 internal sealed class VndbNameRecord(string fullName,
     string fullNameInRomaji,
     string[] visualNovelTitles,
-    string[]? aliases,
+    VndbAlias[]? aliases,
     string? bloodType,
     string? cupSize,
     string? sex,
@@ -35,7 +36,7 @@ internal sealed class VndbNameRecord(string fullName,
     public string[] VisualNovelTitles { get; } = visualNovelTitles;
 
     [JsonPropertyName("Aliases")]
-    public string[]? Aliases { get; private set; } = aliases;
+    public VndbAlias[]? Aliases { get; set; } = aliases;
 
     [JsonPropertyName("Blood Type")]
     public string? BloodType { get; } = bloodType;
@@ -153,9 +154,16 @@ internal sealed class VndbNameRecord(string fullName,
 
         if (Aliases is not null)
         {
-            string aliases = Aliases.Length > 1
-                ? $"Aliases: {string.Join(", ", Aliases)}"
-                : $"Alias: {Aliases[0]}";
+            string aliases;
+            if (Aliases.Length > 1)
+            {
+                aliases = $"Aliases: {string.Join(", ", Aliases.Select(a => a.Latin is not null ? $"{a.Name} ({a.Latin})" : a.Name))}";
+            }
+            else
+            {
+                VndbAlias alias = Aliases[0];
+                aliases = $"Alias: {(alias.Latin is not null ? $"{alias.Name} ({alias.Latin})" : alias.Name)}";
+            }
 
             _ = definitionStringBuilder.AppendLine(aliases);
         }
@@ -172,20 +180,26 @@ internal sealed class VndbNameRecord(string fullName,
 
     public List<NameRecord>? GetAliasRecords()
     {
-        if (Aliases is null)
-        {
-            return null;
-        }
+        return Aliases is null
+            ? null
+            : Aliases.All(a => a.Latin is null)
+                ? GetAliasRecordsFromUnstructuredAliases()
+                : Aliases.Where(a => a.Latin is not null).Select(a => new NameRecord(a.Name, a.Latin!)).ToList();
+    }
 
-        if (Aliases.All(static a => a.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Length is 2))
+    private List<NameRecord>? GetAliasRecordsFromUnstructuredAliases()
+    {
+        Debug.Assert(Aliases is not null);
+
+        if (Aliases.All(static a => a.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Length is 2))
         {
-            Aliases = Aliases.SelectMany(static a => a.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)).ToArray();
+            Aliases = Aliases.SelectMany(static alias => alias.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Select(a => new VndbAlias(a, alias.SpoilerLevel, null))).ToArray();
         }
 
         List<NameRecord> aliasRecords = new(Aliases.Length / 2);
         for (int i = 0; i < Aliases.Length; i++)
         {
-            string alias = Aliases[i];
+            string alias = Aliases[i].Name;
             Match match = Utils.NameInParentheses.Match(alias);
             if (match.Success)
             {
@@ -201,7 +215,7 @@ internal sealed class VndbNameRecord(string fullName,
                 }
                 else if (Utils.LatinRegex.IsMatch(firstMatch) && Utils.LatinRegex.IsMatch(secondMatch))
                 {
-                    Aliases[i] = firstMatch;
+                    Aliases[i].Name = firstMatch;
                 }
             }
         }
@@ -211,9 +225,9 @@ internal sealed class VndbNameRecord(string fullName,
             return aliasRecords;
         }
 
-        foreach (string alias in Aliases)
+        foreach (VndbAlias alias in Aliases)
         {
-            string[] aliases = alias.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            string[] aliases = alias.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             if (aliases.Length is 2)
             {
                 string firstMatch = aliases[0];
@@ -239,24 +253,24 @@ internal sealed class VndbNameRecord(string fullName,
             return null;
         }
 
-        bool evenNumberedAliasesShouldBeJapanese = Utils.JapaneseRegex.IsMatch(Aliases[0]);
+        bool evenNumberedAliasesShouldBeJapanese = Utils.JapaneseRegex.IsMatch(Aliases[0].Name);
         bool hasOnlyValidAliasPairs = true;
         for (int i = 0; i < Aliases.Length; i += 2)
         {
-            if ((evenNumberedAliasesShouldBeJapanese && Utils.JapaneseRegex.IsMatch(Aliases[i]) && Utils.LatinRegex.IsMatch(Aliases[i + 1]))
-                || (!evenNumberedAliasesShouldBeJapanese && Utils.LatinRegex.IsMatch(Aliases[i]) && Utils.JapaneseRegex.IsMatch(Aliases[i + 1])))
+            if ((evenNumberedAliasesShouldBeJapanese && Utils.JapaneseRegex.IsMatch(Aliases[i].Name) && Utils.LatinRegex.IsMatch(Aliases[i + 1].Name))
+                || (!evenNumberedAliasesShouldBeJapanese && Utils.LatinRegex.IsMatch(Aliases[i].Name) && Utils.JapaneseRegex.IsMatch(Aliases[i + 1].Name)))
             {
                 string name;
                 string nameInRomaji;
                 if (evenNumberedAliasesShouldBeJapanese)
                 {
-                    name = Aliases[i];
-                    nameInRomaji = Aliases[i + 1];
+                    name = Aliases[i].Name;
+                    nameInRomaji = Aliases[i + 1].Name;
                 }
                 else
                 {
-                    nameInRomaji = Aliases[i];
-                    name = Aliases[i + 1];
+                    nameInRomaji = Aliases[i].Name;
+                    name = Aliases[i + 1].Name;
                 }
 
                 aliasRecords.Add(new NameRecord(name, nameInRomaji));

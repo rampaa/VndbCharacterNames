@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,6 +17,7 @@ file static class Program
 
         bool shouldAddDefinition = true;
         bool createAliasEntries = true;
+        VndbSpoilerLevel maxSpoilerLevelForAliases = VndbSpoilerLevel.No;
         bool addDefinitionToOneWordNames = false;
         bool addDefinitionToGivenNames = false;
         bool addDefinitionToSurnames = false;
@@ -50,6 +52,15 @@ file static class Program
                         if (result is not null)
                         {
                             createAliasEntries = result.Value;
+
+                            if (createAliasEntries)
+                            {
+                                VndbSpoilerLevel? spoilerLevelResult = GetSpoilerLevelArgValue(args, "--max-spoiler-level-for-aliases", 2);
+                                if (spoilerLevelResult is not null)
+                                {
+                                    maxSpoilerLevelForAliases = spoilerLevelResult.Value;
+                                }
+                            }
 
                             result = GetBoolArgValue(args, "--add-character-details-to-full-names", 2);
                             if (result is not null)
@@ -119,6 +130,11 @@ file static class Program
             }
 
             createAliasEntries = GetAnserOfYesNoQuestion("Create entries for character aliases if they are sufficiently structured? Y/N");
+            if (createAliasEntries)
+            {
+                maxSpoilerLevelForAliases = GetAnserOfSpoilerLevelQuestion("Max spoiler level for aliases? 0: No spoilers, 1: Minor spoilers, 2: Major spoilers");
+            }
+
             shouldAddDefinition = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
             if (shouldAddDefinition)
             {
@@ -140,15 +156,17 @@ file static class Program
 
         int validJsonFileCount = 0;
         long totalVndbNameRecordCount = 0;
-        foreach (string jsonFile in jsonFiles!)
+
+        Debug.Assert(jsonFiles is not null);
+        foreach (string jsonFile in jsonFiles)
         {
             using FileStream fileStream = File.OpenRead(jsonFile);
-            List<VndbNameRecord>? vndbNameRecords;
+            ReadOnlyMemory<VndbNameRecord> vndbNameRecords;
             try
             {
-                vndbNameRecords = JsonSerializer.Deserialize<List<VndbNameRecord>>(fileStream, Utils.Jso)!;
+                vndbNameRecords = JsonSerializer.Deserialize<VndbNameRecord[]>(fileStream, Utils.Jso);
                 ++validJsonFileCount;
-                totalVndbNameRecordCount += vndbNameRecords.Count;
+                totalVndbNameRecordCount += vndbNameRecords.Length;
             }
             catch (JsonException)
             {
@@ -156,8 +174,17 @@ file static class Program
                 continue;
             }
 
-            foreach (VndbNameRecord vndbNameRecord in vndbNameRecords)
+            foreach (VndbNameRecord vndbNameRecord in vndbNameRecords.Span)
             {
+                if (vndbNameRecord.Aliases is not null)
+                {
+                    vndbNameRecord.Aliases = vndbNameRecord.Aliases.Where(a => a.SpoilerLevel <= maxSpoilerLevelForAliases).ToArray();
+                    if (vndbNameRecord.Aliases.Length is 0)
+                    {
+                        vndbNameRecord.Aliases = null;
+                    }
+                }
+
                 string definition = vndbNameRecord.GetDefinition();
                 List<NameRecord>? aliasRecords = createAliasEntries
                     ? vndbNameRecord.GetAliasRecords()
@@ -479,14 +506,79 @@ file static class Program
             return null;
         }
 
-        if (string.Equals(splitOptionParts[1], "true", StringComparison.OrdinalIgnoreCase) || string.Equals(splitOptionParts[1], "t", StringComparison.OrdinalIgnoreCase))
+        string flagValue = splitOptionParts[1];
+        if (string.Equals(flagValue, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(flagValue, "t", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        if (string.Equals(splitOptionParts[1], "false", StringComparison.OrdinalIgnoreCase) || string.Equals(splitOptionParts[1], "f", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(flagValue, "false", StringComparison.OrdinalIgnoreCase) || string.Equals(flagValue, "f", StringComparison.OrdinalIgnoreCase))
         {
             return false;
+        }
+
+        Console.WriteLine($"Invalid value for '{flagName}' option!");
+        return null;
+    }
+
+    private static VndbSpoilerLevel GetAnserOfSpoilerLevelQuestion(string question)
+    {
+        while (true)
+        {
+            Console.WriteLine(question);
+            string? userInput = Console.ReadLine();
+            if (userInput is "0")
+            {
+                return VndbSpoilerLevel.No;
+            }
+
+            if (userInput is "1")
+            {
+                return VndbSpoilerLevel.Minor;
+            }
+
+            if (userInput is "2")
+            {
+                return VndbSpoilerLevel.Major;
+            }
+
+            Console.WriteLine("Invalid input!");
+        }
+    }
+
+    private static VndbSpoilerLevel? GetSpoilerLevelArgValue(string[] args, string flagName, int startIndex)
+    {
+        string[]? splitOptionParts = null;
+        for (int i = startIndex; i < args.Length; i++)
+        {
+            string[] tempOption = args[i].Split('=', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (tempOption.Length is 2 && tempOption[0] == flagName)
+            {
+                splitOptionParts = tempOption;
+                break;
+            }
+        }
+
+        if (splitOptionParts is null)
+        {
+            Console.WriteLine("Invalid input!");
+            return null;
+        }
+
+        string flagValue = splitOptionParts[1];
+        if (flagValue is "0")
+        {
+            return VndbSpoilerLevel.No;
+        }
+
+        if (flagValue is "1")
+        {
+            return VndbSpoilerLevel.Minor;
+        }
+
+        if (flagValue is "2")
+        {
+            return VndbSpoilerLevel.Major;
         }
 
         Console.WriteLine($"Invalid value for '{flagName}' option!");
