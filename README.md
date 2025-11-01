@@ -1,14 +1,14 @@
 # How to use it?
 
-You need the character data from VNDB in the format that can be found in [this link](https://query.vndb.org/8b9ee1b02c3f7760/q). That query is for my personal use only, as it arbitrarily filters out characters based on the visual novels they appear in. So feel free to copy and edit it as you see fit. You should export the result as a JSON file by pressing EXPORT -> JSON. Note that VNDB Query service will truncate the results to the first 100000 rows. So you may need to use OFFSET and export the data multiple times depending on how many rows your query returns.
+You need the character data from VNDB in the format that can be found in [this link](https://query.vndb.org/318bc8137754e392/q). That query is for my personal use only, as it arbitrarily filters out characters based on the visual novels they appear in. So feel free to copy and edit it as you see fit. You should export the result as a JSON file by pressing EXPORT -> JSON. Note that VNDB Query service will truncate the results to the first 100000 rows. So you may need to use OFFSET and export the data multiple times depending on how many rows your query returns.
 
 After getting the necessary JSON files, create a new folder and put those files inside it. After that you can simply run this tool through Command Prompt like this:
 
-`VndbCharacterNames.exe <Path of folder you just created> <Output file path> --create-alias-entries=<true/false> --add-character-details-to-full-names=<true/false> --add-details-to-one-word-full-names=<true/false> --add-details-to-given-names=<true/false> --add-details-to-surnames=<true/false>`
+`VndbCharacterNames.exe <Path of folder you just created> <Output file path> --create-alias-entries=<true/false> --max-spoiler-level-for-aliases=<0: no spoilers/1: minor spoilers/2: major spoilers> --add-character-details-to-full-names=<true/false> --add-details-to-one-word-full-names=<true/false> --add-details-to-given-names=<true/false> --add-details-to-surnames=<true/false>`
 
 e.g.,
 
-`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames --create-alias-entries=true --add-character-details-to-full-names=true --add-character-details-to-one-word-full-names=false --add-character-details-to-given-names=false --add-character-details-to-surnames=false`
+`VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames --create-alias-entries=true --max-spoiler-level-for-aliases=1 --add-character-details-to-full-names=true --add-character-details-to-one-word-full-names=false --add-character-details-to-given-names=false --add-character-details-to-surnames=false`
 
 Or you can double-click `VndbCharacterNames.exe` and input those parameters when prompted.
 
