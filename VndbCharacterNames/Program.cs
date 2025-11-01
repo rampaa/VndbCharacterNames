@@ -23,7 +23,7 @@ file static class Program
         bool addDefinitionToSurnames = false;
 
         bool validArgs = false;
-        if (args.Length is 7)
+        if (args.Length is 8)
         {
             string jsonFolderPath = args[0].Trim('"', ' ');
             if (!Directory.Exists(jsonFolderPath))
@@ -251,8 +251,11 @@ file static class Program
                 Console.WriteLine("You provided a single valid JSON file with exactly 100000 records. This probably means that the result of your query was truncated by VNDB Query.");
             }
 
-            Console.WriteLine("Press any key to exit...");
-            _ = Console.ReadKey();
+            if (!validArgs)
+            {
+                Console.WriteLine("Press any key to exit...");
+                _ = Console.ReadKey();
+            }
         }
         else
         {
