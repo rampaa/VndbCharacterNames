@@ -93,7 +93,7 @@ internal sealed class VndbNameRecord(string fullName,
     {
         return Bust is null && Waist is null && Hip is null
             ? null
-            : $"B/W/H: {Bust?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Waist?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Hip?.ToString(CultureInfo.InvariantCulture) ?? "?"}";
+            : $"B/W/H: {Bust?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Waist?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Hip?.ToString(CultureInfo.InvariantCulture) ?? "?"} cm";
     }
 
     public string GetDefinition()
@@ -123,14 +123,14 @@ internal sealed class VndbNameRecord(string fullName,
         if (Height is not null)
         {
             string weight = Weight is not null
-                ? $", Weight: {Weight}"
+                ? $", Weight: {Weight} kg"
                 : "";
 
-            _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Height: {Height}{weight}");
+            _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Height: {Height} cm{weight}");
         }
         else if (Weight is not null)
         {
-            _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Weight: {Weight}");
+            _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Weight: {Weight} kg");
         }
 
         string? threeSizes = GetThreeSizes();
