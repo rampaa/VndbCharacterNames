@@ -2,13 +2,13 @@ using System.Text.Json.Serialization;
 
 namespace VndbCharacterNames;
 
-internal sealed record class VndbAlias(string Name, VndbSpoilerLevel SpoilerLevel, string? Latin = null)
+internal sealed record class VndbAlias(string Name, VndbSpoilerLevel SpoilerLevel, string? Latin)
 {
     [JsonPropertyName("Name")]
     public string Name { get; set; } = Name;
 
     [JsonPropertyName("Spoiler Level")]
-    public VndbSpoilerLevel SpoilerLevel { get; set; } = SpoilerLevel;
+    public VndbSpoilerLevel SpoilerLevel { get; } = SpoilerLevel;
 
     [JsonPropertyName("Latin")]
     public string? Latin { get; } = Latin;

@@ -1,8 +1,10 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace VndbCharacterNames;
+
 internal static partial class Utils
 {
     public const string SurnameNameType = "Surname";
@@ -13,6 +15,14 @@ internal static partial class Utils
         RespectNullableAnnotations = true,
         RespectRequiredConstructorParameters = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    public static readonly JsonSerializerOptions JsoIgnoringNull = new()
+    {
+        RespectNullableAnnotations = true,
+        RespectRequiredConstructorParameters = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     [GeneratedRegex(@"[\u30A0-\u30FF\uFF66-\uFF9D]", RegexOptions.CultureInvariant)]

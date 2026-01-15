@@ -18,6 +18,7 @@ file static class Program
         bool shouldAddDefinition = true;
         bool createAliasEntries = true;
         VndbSpoilerLevel maxSpoilerLevelForAliases = VndbSpoilerLevel.No;
+        string? pathOfCharacterImages = null;
         bool addDefinitionToOneWordNames = false;
         bool addDefinitionToGivenNames = false;
         bool addDefinitionToSurnames = false;
@@ -62,11 +63,24 @@ file static class Program
                                 }
                             }
 
+                            pathOfCharacterImages = GetArgRawValue(args, "--path-of-character-images", 2);
+                            if (pathOfCharacterImages is not null)
+                            {
+                                if (new DirectoryInfo(pathOfCharacterImages).Name is "ch" && Directory.Exists(Path.Join(pathOfCharacterImages, "00")))
+                                {
+                                    DirectoryInfo? parentFolder = Directory.GetParent(pathOfCharacterImages);
+                                    pathOfCharacterImages = parentFolder?.FullName;
+                                }
+                                else
+                                {
+                                    pathOfCharacterImages = null;
+                                }
+                            }
+
                             result = GetBoolArgValue(args, "--add-character-details-to-full-names", 2);
                             if (result is not null)
                             {
                                 shouldAddDefinition = result.Value;
-
                                 result = GetBoolArgValue(args, "--add-character-details-to-one-word-full-names", 2);
                                 if (result is not null)
                                 {
@@ -129,20 +143,45 @@ file static class Program
                 }
             }
 
-            createAliasEntries = GetAnserOfYesNoQuestion("Create entries for character aliases if they are sufficiently structured? Y/N");
+            createAliasEntries = GetAnswerOfYesNoQuestion("Create entries for character aliases if they are sufficiently structured? Y/N");
             if (createAliasEntries)
             {
-                maxSpoilerLevelForAliases = GetAnserOfSpoilerLevelQuestion("Max spoiler level for aliases? 0: No spoilers, 1: Minor spoilers, 2: Major spoilers");
+                maxSpoilerLevelForAliases = GetAnswerOfSpoilerLevelQuestion("Max spoiler level for aliases? 0: No spoilers, 1: Minor spoilers, 2: Major spoilers");
             }
 
-            shouldAddDefinition = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
+            bool shouldAddCharacterImage = GetAnswerOfYesNoQuestion("Add image of the character if it exists? Y/N");
+            if (shouldAddCharacterImage)
+            {
+                while (true)
+                {
+                    Console.WriteLine(@"Please enter the path to the character images folder named 'ch' you have downloaded from VNDB, it must include the folder name, e.g., C:\vndb-img\ch");
+                    pathOfCharacterImages = Console.ReadLine()?.Trim('"', ' ');
+                    if (pathOfCharacterImages is null || !Path.IsPathFullyQualified(pathOfCharacterImages) || new DirectoryInfo(pathOfCharacterImages).Name is not "ch" || !Directory.Exists(Path.Join(pathOfCharacterImages, "00")))
+                    {
+                        Console.WriteLine("Invalid file path!");
+                    }
+                    else
+                    {
+                        DirectoryInfo? parentFolder = Directory.GetParent(pathOfCharacterImages);
+                        if (parentFolder is not null)
+                        {
+                            pathOfCharacterImages = parentFolder.FullName;
+                            break;
+                        }
+
+                        Console.WriteLine("Invalid file path!");
+                    }
+                }
+            }
+
+            shouldAddDefinition = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
             if (shouldAddDefinition)
             {
-                addDefinitionToOneWordNames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of a character's full name when it consists of a single word? Y/N");
+                addDefinitionToOneWordNames = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of a character's full name when it consists of a single word? Y/N");
                 if (addDefinitionToOneWordNames)
                 {
-                    addDefinitionToGivenNames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of given names? Y/N");
-                    addDefinitionToSurnames = GetAnserOfYesNoQuestion("Add character details (age, height, etc.) to the definition of surnames? Y/N");
+                    addDefinitionToGivenNames = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of given names? Y/N");
+                    addDefinitionToSurnames = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of surnames? Y/N");
                 }
             }
         }
@@ -190,7 +229,11 @@ file static class Program
                     ? vndbNameRecord.GetAliasRecords()
                     : null;
 
-                ProcessFullNames(nameTypesDict, convertedRecords, vndbNameRecord.FullName, vndbNameRecord.FullNameInRomaji, definition, vndbNameRecord.Sex, aliasRecords, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
+                string? characterImagePath = pathOfCharacterImages is not null && vndbNameRecord.ImagePath is not null
+                    ? Path.GetFullPath(Path.Join(pathOfCharacterImages, vndbNameRecord.ImagePath + ".jpg"))
+                    : null;
+
+                ProcessFullNames(nameTypesDict, convertedRecords, vndbNameRecord.FullName, vndbNameRecord.FullNameInRomaji, definition, vndbNameRecord.Sex, aliasRecords, characterImagePath, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
                 string[] fullNames = vndbNameRecord.FullName.Split(['&', '/', '／', '＆', ',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
                 if (fullNames.Length > 1)
                 {
@@ -199,7 +242,7 @@ file static class Program
                     {
                         for (int i = 0; i < fullNames.Length; i++)
                         {
-                            ProcessFullNames(nameTypesDict, convertedRecords, fullNames[i], fullNamesInRomaji[i], definition, vndbNameRecord.Sex, aliasRecords, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
+                            ProcessFullNames(nameTypesDict, convertedRecords, fullNames[i], fullNamesInRomaji[i], definition, vndbNameRecord.Sex, aliasRecords, characterImagePath, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
                         }
                     }
                 }
@@ -225,7 +268,7 @@ file static class Program
                     ? Utils.FullNameAndSexRegex.Replace(record.Definition, "").Replace("\t", "  ", StringComparison.Ordinal).ReplaceLineEndings("\\n")
                     : null;
 
-                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType ?? Utils.OtherNameType}\t{definitionForCustomNameFile}";
+                string line = $"{record.PrimarySpelling}\t{record.Reading}\t{nameType ?? Utils.OtherNameType}\t{definitionForCustomNameFile}{(record.CharacterImagePath is not null ? $"\t{record.CharacterImagePath}" : "")}";
                 lines.Add(line);
 
                 string definitionForNazeka = record.Definition ?? (nameType is not null && nameTypes!.Count < 4
@@ -238,12 +281,13 @@ file static class Program
                 {
                     ["r"] = record.Reading,
                     ["s"] = nazekaSpellingsArray,
-                    ["l"] = nazekaDefinitionsArray
+                    ["l"] = nazekaDefinitionsArray,
+                    ["i"] = record.CharacterImagePath
                 });
             }
 
             File.WriteAllLines(customNamePath, lines);
-            File.WriteAllText(outputFilePath!, JsonSerializer.Serialize(nazekaJsonArray, Utils.Jso));
+            File.WriteAllText(outputFilePath!, JsonSerializer.Serialize(nazekaJsonArray, Utils.JsoIgnoringNull));
             Console.WriteLine($"Successfully created {outputFilePath} and {customNamePath}!");
 
             if (validJsonFileCount is 1 && totalVndbNameRecordCount is 100_000)
@@ -266,7 +310,7 @@ file static class Program
         }
     }
 
-    private static void ProcessFullNames(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, string fullName, string fullNameInRomaji, string definition, string? sex, List<NameRecord>? aliasRecords, bool shouldAddDefinition, bool addDefinitionToOneWordNames, bool addDefinitionToGivenNames, bool addDefinitionToSurnames)
+    private static void ProcessFullNames(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, string fullName, string fullNameInRomaji, string definition, string? sex, List<NameRecord>? aliasRecords, string? characterImagePath, bool shouldAddDefinition, bool addDefinitionToOneWordNames, bool addDefinitionToGivenNames, bool addDefinitionToSurnames)
     {
         List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? surnameAndNameRecords = GetSurnameAndNameRecords(fullName, fullNameInRomaji);
         bool oneWordName = surnameAndNameRecords is null;
@@ -277,14 +321,30 @@ file static class Program
         }
 
         bool addDefinitionAndSex = shouldAddDefinition && (addDefinitionToOneWordNames || !oneWordName);
-        _ = convertedRecords.Add(new ConvertedNameRecord(fullName, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+        ConvertedNameRecord convertedFullNameRecord = new(fullName, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null, characterImagePath);
+        bool added = convertedRecords.Add(convertedFullNameRecord);
+        if (!added)
+        {
+            if (convertedRecords.TryGetValue(convertedFullNameRecord, out ConvertedNameRecord? recordFromSet))
+            {
+                recordFromSet.CharacterImagePath = null;
+            }
+        }
 
         if (!oneWordName)
         {
             string fullNameWithoutAnyWhiteSpace = string.Join("", fullName.Split());
             if (fullNameWithoutAnyWhiteSpace != fullName)
             {
-                _ = convertedRecords.Add(new ConvertedNameRecord(fullNameWithoutAnyWhiteSpace, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+                ConvertedNameRecord convertedFullNameWithoutAnyWhiteSpaceRecord = new(fullNameWithoutAnyWhiteSpace, fullNameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null, characterImagePath);
+                added = convertedRecords.Add(convertedFullNameWithoutAnyWhiteSpaceRecord);
+                if (!added)
+                {
+                    if (convertedRecords.TryGetValue(convertedFullNameWithoutAnyWhiteSpaceRecord, out ConvertedNameRecord? recordFromSet))
+                    {
+                        recordFromSet.CharacterImagePath = null;
+                    }
+                }
             }
 
             foreach ((NameRecord surnameRecord, NameRecord givenNameRecord) in surnameAndNameRecords!)
@@ -296,8 +356,25 @@ file static class Program
                     nameTypesDict.AddIfNotExists(givenNameRecord, sex);
                 }
 
-                _ = convertedRecords.Add(new ConvertedNameRecord(surnameRecord.Name, surnameRecord.NameInRomaji, addDefinitionToSurnames ? Utils.SurnameNameType : null, addDefinitionToSurnames ? definition : null));
-                _ = convertedRecords.Add(new ConvertedNameRecord(givenNameRecord.Name, givenNameRecord.NameInRomaji, addDefinitionToGivenNames ? sex : null, addDefinitionToGivenNames ? definition : null));
+                ConvertedNameRecord convertedGivenNameRecord = new(surnameRecord.Name, surnameRecord.NameInRomaji, addDefinitionToSurnames ? Utils.SurnameNameType : null, addDefinitionToSurnames ? definition : null, characterImagePath);
+                added = convertedRecords.Add(convertedGivenNameRecord);
+                if (!added)
+                {
+                    if (convertedRecords.TryGetValue(convertedGivenNameRecord, out ConvertedNameRecord? recordFromSet))
+                    {
+                        recordFromSet.CharacterImagePath = null;
+                    }
+                }
+
+                ConvertedNameRecord convertedSurnameRecord = new(givenNameRecord.Name, givenNameRecord.NameInRomaji, addDefinitionToGivenNames ? sex : null, addDefinitionToGivenNames ? definition : null, characterImagePath);
+                added = convertedRecords.Add(convertedSurnameRecord);
+                if (!added)
+                {
+                    if (convertedRecords.TryGetValue(convertedSurnameRecord, out ConvertedNameRecord? recordFromSet))
+                    {
+                        recordFromSet.CharacterImagePath = null;
+                    }
+                }
             }
 
             if (aliasRecords is not null)
@@ -308,7 +385,7 @@ file static class Program
                 {
                     if (!surnames.Contains(aliasRecord.Name) && !givenNames.Contains(aliasRecord.Name))
                     {
-                        ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames, surnames, givenNames);
+                        ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex, characterImagePath, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames, surnames, givenNames);
                     }
                 }
             }
@@ -317,12 +394,12 @@ file static class Program
         {
             foreach (NameRecord aliasRecord in aliasRecords)
             {
-                ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
+                ProcessAlias(nameTypesDict, convertedRecords, aliasRecord, definition, sex, characterImagePath, shouldAddDefinition, addDefinitionToOneWordNames, addDefinitionToGivenNames, addDefinitionToSurnames);
             }
         }
     }
 
-    private static void ProcessAlias(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, NameRecord aliasRecord, string definition, string? sex, bool shouldAddDefinition, bool addDefinitionToOneWordNames, bool addDefinitionToGivenNames, bool addDefinitionToSurnames, string[]? surnames = null, string[]? givenNames = null)
+    private static void ProcessAlias(Dictionary<NameRecord, List<string>> nameTypesDict, HashSet<ConvertedNameRecord> convertedRecords, NameRecord aliasRecord, string definition, string? sex, string? characterImagePath, bool shouldAddDefinition, bool addDefinitionToOneWordNames, bool addDefinitionToGivenNames, bool addDefinitionToSurnames, string[]? surnames = null, string[]? givenNames = null)
     {
         List<(NameRecord surnameRecord, NameRecord givenNameRecord)>? aliasSurnameAndNameRecords = GetSurnameAndNameRecords(aliasRecord.Name, aliasRecord.NameInRomaji);
         bool oneWordName = aliasSurnameAndNameRecords is null;
@@ -333,14 +410,30 @@ file static class Program
         }
 
         bool addDefinitionAndSex = shouldAddDefinition && (addDefinitionToOneWordNames || !oneWordName);
-        _ = convertedRecords.Add(new ConvertedNameRecord(aliasRecord.Name, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+        ConvertedNameRecord convertedFullAlias = new(aliasRecord.Name, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null, characterImagePath);
+        bool added = convertedRecords.Add(convertedFullAlias);
+        if (!added)
+        {
+            if (convertedRecords.TryGetValue(convertedFullAlias, out ConvertedNameRecord? recordFromSet))
+            {
+                recordFromSet.CharacterImagePath = null;
+            }
+        }
 
         if (!oneWordName)
         {
             string fullAliasWithoutAnyWhiteSpace = string.Join("", aliasRecord.Name.Split());
             if (fullAliasWithoutAnyWhiteSpace != aliasRecord.Name)
             {
-                _ = convertedRecords.Add(new ConvertedNameRecord(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null));
+                ConvertedNameRecord convertedFullAliasWithoutAnyWhiteSpaceRecord = new(fullAliasWithoutAnyWhiteSpace, aliasRecord.NameInRomaji, addDefinitionAndSex ? sex : null, addDefinitionAndSex ? definition : null, characterImagePath);
+                added = convertedRecords.Add(convertedFullAliasWithoutAnyWhiteSpaceRecord);
+                if (!added)
+                {
+                    if (convertedRecords.TryGetValue(convertedFullAliasWithoutAnyWhiteSpaceRecord, out ConvertedNameRecord? recordFromSet))
+                    {
+                        recordFromSet.CharacterImagePath = null;
+                    }
+                }
             }
 
             for (int i = 0; i < aliasSurnameAndNameRecords!.Count; i++)
@@ -350,7 +443,16 @@ file static class Program
                     && !aliasSurnameAndNameRecords.Where((record, index) => index < i && aliasSurnameRecord.Name == record.surnameRecord.Name).Any())
                 {
                     nameTypesDict.AddIfNotExists(aliasSurnameRecord, Utils.SurnameNameType);
-                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji, addDefinitionToSurnames ? Utils.SurnameNameType : null, addDefinitionToSurnames ? definition : null));
+
+                    ConvertedNameRecord convertedAliasSurnameRecord = new(aliasSurnameRecord.Name, aliasSurnameRecord.NameInRomaji, addDefinitionToSurnames ? Utils.SurnameNameType : null, addDefinitionToSurnames ? definition : null, characterImagePath);
+                    added = convertedRecords.Add(convertedAliasSurnameRecord);
+                    if (!added)
+                    {
+                        if (convertedRecords.TryGetValue(convertedAliasSurnameRecord, out ConvertedNameRecord? recordFromSet))
+                        {
+                            recordFromSet.CharacterImagePath = null;
+                        }
+                    }
                 }
 
                 if ((!givenNames?.Contains(aliasGivenNameRecord.Name) ?? true)
@@ -361,7 +463,15 @@ file static class Program
                         nameTypesDict.AddIfNotExists(aliasGivenNameRecord, sex);
                     }
 
-                    _ = convertedRecords.Add(new ConvertedNameRecord(aliasGivenNameRecord.Name, aliasGivenNameRecord.NameInRomaji, addDefinitionToGivenNames ? sex : null, addDefinitionToGivenNames ? definition : null));
+                    ConvertedNameRecord convertedAliasGivenNameRecord = new(aliasGivenNameRecord.Name, aliasGivenNameRecord.NameInRomaji, addDefinitionToGivenNames ? sex : null, addDefinitionToGivenNames ? definition : null, characterImagePath);
+                    added = convertedRecords.Add(convertedAliasGivenNameRecord);
+                    if (!added)
+                    {
+                        if (convertedRecords.TryGetValue(convertedAliasGivenNameRecord, out ConvertedNameRecord? recordFromSet))
+                        {
+                            recordFromSet.CharacterImagePath = null;
+                        }
+                    }
                 }
             }
         }
@@ -457,11 +567,11 @@ file static class Program
         ];
 
         int index = splitFullNameParts.Length - 1;
-        foreach (KeyValuePair<string, string[]> surnamePerfix in surnamePrefixes)
+        foreach (KeyValuePair<string, string[]> surnamePrefix in surnamePrefixes)
         {
-            KeyValuePair<string, string[]> perfix = surnamePerfix;
-            int tempIndex = Array.FindIndex(splitFullNameInRomajiParts, 1, splitFullNameParts.Length - 2, r => r.Equals(perfix.Key, StringComparison.OrdinalIgnoreCase));
-            if (tempIndex > 0 && index > tempIndex && surnamePerfix.Value.Contains(splitFullNameParts[tempIndex]))
+            KeyValuePair<string, string[]> prefix = surnamePrefix;
+            int tempIndex = Array.FindIndex(splitFullNameInRomajiParts, 1, splitFullNameParts.Length - 2, r => r.Equals(prefix.Key, StringComparison.OrdinalIgnoreCase));
+            if (tempIndex > 0 && index > tempIndex && surnamePrefix.Value.Contains(splitFullNameParts[tempIndex]))
             {
                 index = tempIndex;
             }
@@ -470,7 +580,7 @@ file static class Program
         return index;
     }
 
-    private static bool GetAnserOfYesNoQuestion(string question)
+    private static bool GetAnswerOfYesNoQuestion(string question)
     {
         while (true)
         {
@@ -490,7 +600,7 @@ file static class Program
         }
     }
 
-    private static bool? GetBoolArgValue(string[] args, string flagName, int startIndex)
+    private static string? GetArgRawValue(string[] args, string flagName, int startIndex)
     {
         string[]? splitOptionParts = null;
         for (int i = startIndex; i < args.Length; i++)
@@ -503,13 +613,24 @@ file static class Program
             }
         }
 
-        if (splitOptionParts is null)
+        if (splitOptionParts is not null)
         {
-            Console.WriteLine("Invalid input!");
+            return splitOptionParts[1];
+        }
+
+        Console.WriteLine("Invalid input!");
+        return null;
+
+    }
+
+    private static bool? GetBoolArgValue(string[] args, string flagName, int startIndex)
+    {
+        string? flagValue = GetArgRawValue(args, flagName, startIndex);
+        if (flagValue is null)
+        {
             return null;
         }
 
-        string flagValue = splitOptionParts[1];
         if (string.Equals(flagValue, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(flagValue, "t", StringComparison.OrdinalIgnoreCase))
         {
             return true;
@@ -524,7 +645,7 @@ file static class Program
         return null;
     }
 
-    private static VndbSpoilerLevel GetAnserOfSpoilerLevelQuestion(string question)
+    private static VndbSpoilerLevel GetAnswerOfSpoilerLevelQuestion(string question)
     {
         while (true)
         {
@@ -551,41 +672,14 @@ file static class Program
 
     private static VndbSpoilerLevel? GetSpoilerLevelArgValue(string[] args, string flagName, int startIndex)
     {
-        string[]? splitOptionParts = null;
-        for (int i = startIndex; i < args.Length; i++)
+        string? flagValue = GetArgRawValue(args, flagName, startIndex);
+        return flagValue switch
         {
-            string[] tempOption = args[i].Split('=', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            if (tempOption.Length is 2 && tempOption[0] == flagName)
-            {
-                splitOptionParts = tempOption;
-                break;
-            }
-        }
-
-        if (splitOptionParts is null)
-        {
-            Console.WriteLine("Invalid input!");
-            return null;
-        }
-
-        string flagValue = splitOptionParts[1];
-        if (flagValue is "0")
-        {
-            return VndbSpoilerLevel.No;
-        }
-
-        if (flagValue is "1")
-        {
-            return VndbSpoilerLevel.Minor;
-        }
-
-        if (flagValue is "2")
-        {
-            return VndbSpoilerLevel.Major;
-        }
-
-        Console.WriteLine($"Invalid value for '{flagName}' option!");
-        return null;
+            "0" => VndbSpoilerLevel.No,
+            "1" => VndbSpoilerLevel.Minor,
+            "2" => VndbSpoilerLevel.Major,
+            _ => null
+        };
     }
 
 }

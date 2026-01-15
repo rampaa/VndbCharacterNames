@@ -16,6 +16,7 @@ internal sealed class VndbNameRecord(string fullName,
     string? bloodType,
     string? cupSize,
     string? sex,
+    string? imagePath,
     int? bust,
     int? waist,
     int? hip,
@@ -46,6 +47,9 @@ internal sealed class VndbNameRecord(string fullName,
 
     [JsonPropertyName("Sex")]
     public string? Sex { get; } = sex;
+
+    [JsonPropertyName("Image Path")]
+    public string? ImagePath { get; } = imagePath;
 
     [JsonPropertyName("Bust")]
     public int? Bust { get; } = bust;
@@ -157,7 +161,7 @@ internal sealed class VndbNameRecord(string fullName,
             string aliases;
             if (Aliases.Length > 1)
             {
-                aliases = $"Aliases: {string.Join(", ", Aliases.Select(a => a.Latin is not null ? $"{a.Name} ({a.Latin})" : a.Name))}";
+                aliases = $"Aliases: {string.Join(", ", Aliases.Select(static a => a.Latin is not null ? $"{a.Name} ({a.Latin})" : a.Name))}";
             }
             else
             {
@@ -182,9 +186,9 @@ internal sealed class VndbNameRecord(string fullName,
     {
         return Aliases is null
             ? null
-            : Aliases.All(a => a.Latin is null)
+            : Aliases.All(static a => a.Latin is null)
                 ? GetAliasRecordsFromUnstructuredAliases()
-                : Aliases.Where(a => a.Latin is not null).Select(a => new NameRecord(a.Name, a.Latin!)).ToList();
+                : Aliases.Where(static a => a.Latin is not null).Select(static a => new NameRecord(a.Name, a.Latin!)).ToList();
     }
 
     private List<NameRecord>? GetAliasRecordsFromUnstructuredAliases()
