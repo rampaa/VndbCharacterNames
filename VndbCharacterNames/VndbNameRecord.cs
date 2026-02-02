@@ -197,7 +197,7 @@ internal sealed class VndbNameRecord(string fullName,
 
         if (Aliases.All(static a => a.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Length is 2))
         {
-            Aliases = Aliases.SelectMany(static alias => alias.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Select(a => new VndbAlias(a, alias.SpoilerLevel, null))).ToArray();
+            Aliases = Aliases.SelectMany(static alias => alias.Name.Split([',', '、', '，'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Select(a => new VndbAlias(a, alias.SpoilerLevel))).ToArray();
         }
 
         List<NameRecord> aliasRecords = new(Aliases.Length / 2);
