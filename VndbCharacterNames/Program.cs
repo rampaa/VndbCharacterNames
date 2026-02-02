@@ -24,7 +24,7 @@ file static class Program
         bool addDefinitionToSurnames = false;
 
         bool validArgs = false;
-        if (args.Length is 8)
+        if (args.Length >= 8)
         {
             string jsonFolderPath = args[0].Trim('"', ' ');
             if (!Directory.Exists(jsonFolderPath))
