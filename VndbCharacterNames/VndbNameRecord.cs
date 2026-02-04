@@ -17,6 +17,7 @@ internal sealed class VndbNameRecord(string fullName,
     string? cupSize,
     string? sex,
     string? imagePath,
+    string? description,
     int? bust,
     int? waist,
     int? hip,
@@ -50,6 +51,9 @@ internal sealed class VndbNameRecord(string fullName,
 
     [JsonPropertyName("Image Path")]
     public string? ImagePath { get; } = imagePath;
+
+    [JsonPropertyName("Description")]
+    public string? Description { get; set; } = description;
 
     [JsonPropertyName("Bust")]
     public int? Bust { get; } = bust;
@@ -100,7 +104,32 @@ internal sealed class VndbNameRecord(string fullName,
             : $"B/W/H: {Bust?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Waist?.ToString(CultureInfo.InvariantCulture) ?? "?"}/{Hip?.ToString(CultureInfo.InvariantCulture) ?? "?"} cm";
     }
 
-    public string GetDefinition()
+    private string? GetDescription(bool includeSpoilersInDescription)
+    {
+        if (Description is null)
+        {
+            return null;
+        }
+
+        if (!includeSpoilersInDescription)
+        {
+            Description = Utils.DescriptionInSpoilerTags.Replace(Description, "");
+        }
+
+        Description = Utils.BbCodeTags.Replace(Description, "");
+        Description = Utils.ExcessNewlines.Replace(Description, "\n\n");
+        Description = Description.Trim();
+
+        if (Description.Length is 0)
+        {
+            Description = null;
+            return null;
+        }
+
+        return $"\n{Description}";
+    }
+
+    public string GetDefinition(bool addDescriptionToDefinition, bool includeSpoilersInDescription)
     {
         StringBuilder definitionStringBuilder = new();
         _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Full name: {FullName} ({FullNameInRomaji})");
@@ -175,6 +204,15 @@ internal sealed class VndbNameRecord(string fullName,
         if (VisualNovelTitles.Length is 1)
         {
             _ = definitionStringBuilder.AppendLine(CultureInfo.InvariantCulture, $"VN: {VisualNovelTitles[0]}");
+        }
+
+        if (addDescriptionToDefinition)
+        {
+            string? description = GetDescription(includeSpoilersInDescription);
+            if (description is not null)
+            {
+                _ = definitionStringBuilder.AppendLine(description);
+            }
         }
 
         return definitionStringBuilder.Length > 0

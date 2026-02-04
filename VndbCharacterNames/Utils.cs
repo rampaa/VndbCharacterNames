@@ -45,4 +45,13 @@ internal static partial class Utils
 
     [GeneratedRegex(@"(.+?)\s*\(([^,]+?)\)", RegexOptions.CultureInvariant)]
     public static partial Regex NameInParentheses { get; }
+
+    [GeneratedRegex(@"\[spoiler\][\s\S]*?\[/spoiler\]", RegexOptions.CultureInvariant)]
+    public static partial Regex DescriptionInSpoilerTags { get; }
+
+    [GeneratedRegex("\n{3,}", RegexOptions.CultureInvariant)]
+    public static partial Regex ExcessNewlines { get; }
+
+    [GeneratedRegex(@"\[(\/)?(?:b|i|u|s|url|quote|spoiler|raw|code)(?:=[^\]]+)?\]", RegexOptions.CultureInvariant)]
+    public static partial Regex BbCodeTags { get; }
 }

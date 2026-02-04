@@ -18,13 +18,15 @@ file static class Program
         bool shouldAddDefinition = true;
         bool createAliasEntries = true;
         VndbSpoilerLevel maxSpoilerLevelForAliases = VndbSpoilerLevel.No;
+        bool includeSpoilersInDescription = false;
         string? pathOfCharacterImages = null;
         bool addDefinitionToOneWordNames = false;
         bool addDefinitionToGivenNames = false;
         bool addDefinitionToSurnames = false;
+        bool addDescriptionToDefinition = false;
 
         bool validArgs = false;
-        if (args.Length >= 8)
+        if (args.Length >= 9)
         {
             string jsonFolderPath = args[0].Trim('"', ' ');
             if (!Directory.Exists(jsonFolderPath))
@@ -81,6 +83,21 @@ file static class Program
                             if (result is not null)
                             {
                                 shouldAddDefinition = result.Value;
+
+                                result = GetBoolArgValue(args, "--add-description-to-definition", 2);
+                                if (result is not null)
+                                {
+                                    addDescriptionToDefinition = result.Value;
+                                    if (addDescriptionToDefinition)
+                                    {
+                                        result = GetBoolArgValue(args, "--include-spoilers-in-description", 2);
+                                        if (result is not null)
+                                        {
+                                            includeSpoilersInDescription = result.Value;
+                                        }
+                                    }
+                                }
+
                                 result = GetBoolArgValue(args, "--add-character-details-to-one-word-full-names", 2);
                                 if (result is not null)
                                 {
@@ -177,6 +194,12 @@ file static class Program
             shouldAddDefinition = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of full names? Y/N");
             if (shouldAddDefinition)
             {
+                addDescriptionToDefinition = GetAnswerOfYesNoQuestion("Add character description to the definition? Y/N");
+                if (addDescriptionToDefinition)
+                {
+                    includeSpoilersInDescription = GetAnswerOfYesNoQuestion("Include spoilers in the description? Y/N");
+                }
+
                 addDefinitionToOneWordNames = GetAnswerOfYesNoQuestion("Add character details (age, height, etc.) to the definition of a character's full name when it consists of a single word? Y/N");
                 if (addDefinitionToOneWordNames)
                 {
@@ -224,7 +247,7 @@ file static class Program
                     }
                 }
 
-                string definition = vndbNameRecord.GetDefinition();
+                string definition = vndbNameRecord.GetDefinition(addDescriptionToDefinition, includeSpoilersInDescription);
                 List<NameRecord>? aliasRecords = createAliasEntries
                     ? vndbNameRecord.GetAliasRecords()
                     : null;
