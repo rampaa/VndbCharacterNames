@@ -5,7 +5,7 @@
 You need character data from VNDB in JSON format. You can obtain it using the VNDB Query service.
 
 Example query (for reference):  
-https://query.vndb.org/6d0779bc27f41b0e/q
+https://query.vndb.org/0e6f3eba652fb016/q
 
 > ⚠️ This query is for my personal use only. It arbitrarily filters characters based on the visual novels they appear in.  
 > Feel free to copy and modify it to suit your needs.
@@ -103,6 +103,8 @@ VndbCharacterNames.exe <InputFolderPath> <OutputFilePath> \
   --create-alias-entries=<true|false> \
   --max-spoiler-level-for-aliases=<0|1|2> \
   --add-character-details-to-full-names=<true|false> \
+  --add-description-to-definition=<true|false> \
+  --include-spoilers-in-description=<true|false> \
   --add-details-to-one-word-full-names=<true|false> \
   --add-details-to-given-names=<true|false> \
   --add-details-to-surnames=<true|false> \
@@ -116,6 +118,8 @@ VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\
   --create-alias-entries=true \
   --max-spoiler-level-for-aliases=1 \
   --add-character-details-to-full-names=true \
+  --add-description-to-definition=false \
+  --include-spoilers-in-description=false \
   --add-details-to-one-word-full-names=false \
   --add-details-to-given-names=false \
   --add-details-to-surnames=false \
