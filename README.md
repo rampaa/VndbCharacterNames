@@ -98,7 +98,7 @@ rsync -rtpv rsync://dl.vndb.org/vndb-img/ch/ /c/VNDB/ch/
 
 You can run the tool from `Command Prompt`:
 
-```text
+```cmd
 VndbCharacterNames.exe <InputFolderPath> <OutputFilePath> \
   --create-alias-entries=<true|false> \
   --max-spoiler-level-for-aliases=<0|1|2> \
@@ -111,9 +111,11 @@ VndbCharacterNames.exe <InputFolderPath> <OutputFilePath> \
   --path-of-character-images=<VNDB character image folder if you downloaded it, otherwise you must omit this parameter>
 ```
 
-### Example
+### Recommended settings:
 
-```text
+If you did not uncomment the `v.id = 'v7'` line to retrieve the characters from a single visual novel, following settings are recommended to create a less cluttered dictionary:
+
+```cmd
 VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames \
   --create-alias-entries=true \
   --max-spoiler-level-for-aliases=1 \
@@ -123,6 +125,21 @@ VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\
   --add-details-to-one-word-full-names=false \
   --add-details-to-given-names=false \
   --add-details-to-surnames=false \
+  --path-of-character-images="C:\VNDB\ch"
+```
+
+If you did uncomment the `v.id = 'v7'` line to retrieve the characters from a single visual novel, following settings are recommended:
+
+```cmd
+VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames \
+  --create-alias-entries=true \
+  --max-spoiler-level-for-aliases=1 \
+  --add-character-details-to-full-names=true \
+  --add-description-to-definition=true \
+  --include-spoilers-in-description=false \
+  --add-details-to-one-word-full-names=true \
+  --add-details-to-given-names=true \
+  --add-details-to-surnames=true \
   --path-of-character-images="C:\VNDB\ch"
 ```
 
