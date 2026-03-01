@@ -137,7 +137,7 @@ The tool generates two files:
 1. `{SpecifiedFileName}_Custom_Name.txt`  
 - Format: `JL Custom Name`
 - Not recommended for full VNDB character data
-- Best used when generating a custom name dictionary for characters from a specific visual novel
+- Best used when a custom character name dictionary is generated for a specific visual novel by uncommenting the `v.id = 'v7'` line in the query and replacing `v7` with the VNDB ID of the chosen visual novel.
 - Rename it to: `{JLProfileNameForTheVN}_Custom_Name.txt`
 - Place it under: `..\JL\Profiles`
 
