@@ -7,8 +7,8 @@ You need character data from VNDB in JSON format. You can obtain it using the VN
 Example query (for reference):  
 https://query.vndb.org/0e6f3eba652fb016/q
 
-> ⚠️ This query is for my personal use only. It arbitrarily filters characters based on the visual novels they appear in.  
-> Feel free to copy and modify it to suit your needs.
+> ⚠️ This query is for personal use only. Feel free to copy and modify it as needed.  
+> To retrieve characters from a specific visual novel, uncomment the `v.id = 'v7'` line and replace `v7` with the VNDB ID of your chosen visual novel.  
 
 ### Exporting the data
 
