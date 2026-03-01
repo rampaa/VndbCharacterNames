@@ -111,7 +111,7 @@ VndbCharacterNames.exe <InputFolderPath> <OutputFilePath> \
   --path-of-character-images=<VNDB character image folder if you downloaded it, otherwise you must omit this parameter>
 ```
 
-### Recommended settings:
+### Recommended settings
 
 If you did not uncomment the `v.id = 'v7'` line to retrieve the characters from a single visual novel, following settings are recommended to create a less cluttered dictionary:
 
