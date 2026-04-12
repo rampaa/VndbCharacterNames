@@ -5,10 +5,10 @@
 You need character data from VNDB in JSON format. You can obtain it using the VNDB Query service.
 
 Example query (for reference):  
-https://query.vndb.org/6d0779bc27f41b0e/q
+https://query.vndb.org/0e6f3eba652fb016/q
 
-> ⚠️ This query is for my personal use only. It arbitrarily filters characters based on the visual novels they appear in.  
-> Feel free to copy and modify it to suit your needs.
+> ⚠️ This query is for personal use only. Feel free to copy and modify it as needed.  
+> To retrieve characters from a specific visual novel, uncomment the `v.id = 'v7'` line and replace `v7` with the VNDB ID of your chosen visual novel.  
 
 ### Exporting the data
 
@@ -98,27 +98,48 @@ rsync -rtpv rsync://dl.vndb.org/vndb-img/ch/ /c/VNDB/ch/
 
 You can run the tool from `Command Prompt`:
 
-```text
+```cmd
 VndbCharacterNames.exe <InputFolderPath> <OutputFilePath> \
   --create-alias-entries=<true|false> \
   --max-spoiler-level-for-aliases=<0|1|2> \
   --add-character-details-to-full-names=<true|false> \
+  --add-description-to-definition=<true|false> \
+  --include-spoilers-in-description=<true|false> \
   --add-details-to-one-word-full-names=<true|false> \
   --add-details-to-given-names=<true|false> \
   --add-details-to-surnames=<true|false> \
   --path-of-character-images=<VNDB character image folder if you downloaded it, otherwise you must omit this parameter>
 ```
 
-### Example
+### Recommended settings
 
-```text
+If you did not uncomment the `v.id = 'v7'` line to retrieve the characters from a single visual novel, following settings are recommended to create a less cluttered dictionary:
+
+```cmd
 VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames \
   --create-alias-entries=true \
   --max-spoiler-level-for-aliases=1 \
   --add-character-details-to-full-names=true \
+  --add-description-to-definition=false \
+  --include-spoilers-in-description=false \
   --add-details-to-one-word-full-names=false \
   --add-details-to-given-names=false \
   --add-details-to-surnames=false \
+  --path-of-character-images="C:\VNDB\ch"
+```
+
+If you did uncomment the `v.id = 'v7'` line to retrieve the characters from a single visual novel, following settings are recommended:
+
+```cmd
+VndbCharacterNames.exe C:\Users\User\VndbExports C:\Users\User\Desktop\JL\Dicts\VndbCharacterNames \
+  --create-alias-entries=true \
+  --max-spoiler-level-for-aliases=1 \
+  --add-character-details-to-full-names=true \
+  --add-description-to-definition=true \
+  --include-spoilers-in-description=false \
+  --add-details-to-one-word-full-names=true \
+  --add-details-to-given-names=true \
+  --add-details-to-surnames=true \
   --path-of-character-images="C:\VNDB\ch"
 ```
 
@@ -133,7 +154,7 @@ The tool generates two files:
 1. `{SpecifiedFileName}_Custom_Name.txt`  
 - Format: `JL Custom Name`
 - Not recommended for full VNDB character data
-- Best used when generating a custom name dictionary for characters from a specific visual novel
+- Best used when a custom character name dictionary is generated for a specific visual novel by uncommenting the `v.id = 'v7'` line in the query and replacing `v7` with the VNDB ID of the chosen visual novel.
 - Rename it to: `{JLProfileNameForTheVN}_Custom_Name.txt`
 - Place it under: `..\JL\Profiles`
 
