@@ -507,7 +507,7 @@ file static class Program
             return null;
         }
 
-        string[] splitFullNameParts = fullName.Split([' ', '　', '・', '・', '･', '·', '＝', '=', '゠'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        string[] splitFullNameParts = fullName.Split([' ', '　', '・', '･', '·', '＝', '=', '゠'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (splitFullNameParts.Length is 1)
         {
             return null;
